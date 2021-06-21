@@ -10,7 +10,9 @@ tudo bem
 flw
 '
 end
-@ outro comentario".chars().collect();
+@ outro comentario"
+        .chars()
+        .collect();
     let mut lexer = Scanner::new(input);
 
     for v in lexer.start().into_iter() {

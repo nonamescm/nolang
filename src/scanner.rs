@@ -1,8 +1,5 @@
 mod tokens;
-use tokens::{
-    keyword_get_tok,
-    Tokens as Tok
-};
+use tokens::{keyword_get_tok, Tokens as Tok};
 
 fn is_valid_letter(c: &char) -> bool {
     c.is_alphabetic() || c == &'_'
@@ -12,7 +9,7 @@ pub struct Scanner {
     line: usize,
     pos: usize,
     raw: Vec<char>,
-    ch: char
+    ch: char,
 }
 
 impl Scanner {
@@ -21,14 +18,14 @@ impl Scanner {
             ch: '#',
             raw: input,
             pos: 0,
-            line: 1
+            line: 1,
         }
     }
 
     fn next(&mut self) {
         self.ch = match self.pos >= self.raw.len() {
             true => '#',
-            _ => self.raw[self.pos]
+            _ => self.raw[self.pos],
         };
 
         self.pos += 1;
@@ -45,21 +42,21 @@ impl Scanner {
             loop {
                 ident.push(self.ch);
                 self.next();
-                if !is_valid_letter(&self.ch){
-                    break
+                if !is_valid_letter(&self.ch) {
+                    break;
                 }
             }
             match keyword_get_tok(&ident) {
                 Some(v) => v,
-                None => Tok::IDENT(ident)
+                None => Tok::IDENT(ident),
             }
         } else if self.ch.is_numeric() {
             let mut num = vec![];
             loop {
                 num.push(self.ch);
                 self.next();
-                if self.ch.is_numeric(){
-                    break
+                if self.ch.is_numeric() {
+                    break;
                 }
             }
             Tok::NUM(num)
@@ -82,11 +79,11 @@ impl Scanner {
         match self.ch {
             '#' => Tok::EOF,
 
-            ' '|'\r'|'\t' => Tok::SPACE,
+            ' ' | '\r' | '\t' => Tok::SPACE,
             '\n' => {
                 self.line += 1;
                 Tok::NEWLINE
-            },
+            }
 
             '+' => Tok::PLUS,
             '-' => Tok::MINUS,
@@ -96,8 +93,11 @@ impl Scanner {
             '>' => Tok::GT,
             '<' => Tok::LT,
             '=' => match self.raw[self.pos + 1] {
-                '=' => { self.next(); Tok::COMP },
-                _ => Tok::ASSIGN
+                '=' => {
+                    self.next();
+                    Tok::COMP
+                }
+                _ => Tok::ASSIGN,
             },
 
             ',' => Tok::COMMA,
@@ -112,7 +112,7 @@ impl Scanner {
             '@' => self.ignore_comment(),
             '|' => Tok::PIPE,
             '$' => Tok::DOLLAR,
-            '\''|'"' => {
+            '\'' | '"' => {
                 let ch = self.ch;
                 let mut str_vec = vec![];
                 self.next();
@@ -122,7 +122,7 @@ impl Scanner {
                 }
                 Tok::STRING(str_vec)
             }
-            _ => self.get_val()
+            _ => self.get_val(),
         }
     }
 
@@ -132,11 +132,11 @@ impl Scanner {
         loop {
             let tok = match self.get_tok() {
                 Tok::EOF => break,
-                e => e
+                e => e,
             };
             match tok {
                 Tok::SPACE => (),
-                _ => vec_tok.push(tok)
+                _ => vec_tok.push(tok),
             }
             self.next();
         }

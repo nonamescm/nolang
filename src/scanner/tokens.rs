@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #[derive(PartialEq, Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Tokens {
     // reserved fields
     EOF,
@@ -8,14 +9,14 @@ pub enum Tokens {
 
     // value fields
     IDENT(Vec<char>), // identifier, like: let main = 1
-    NUM(Vec<char>), // number
+    NUM(Vec<char>),   // number
     STRING(Vec<char>),
 
     // reserved keywords
     TRUE,
     FALSE,
     NONE, // Null value
-    LET, // declare function
+    LET,  // declare function
     CASE, // switch-case
     AS,
     RETURN,
@@ -28,33 +29,33 @@ pub enum Tokens {
     IGNORE,
 
     // reserved statements
-    WRITE, // print statement
+    WRITE,   // print statement
     WRITELN, // println statement
 
     // Symbols
-    COLON, // `:`
+    COLON,     // `:`
     SEMICOLON, // `;`
     MINUS,
     PLUS,
     ASTERISK, // `*`
-    SLASH, // `/`
-    PERCENT, // `%`
+    SLASH,    // `/`
+    PERCENT,  // `%`
     RPAREN,
     LPAREN,
     RBRACE,
     LBRACE,
-    ASSIGN, // `=`
-    COMP, // `==`
-    GT, // `>`
-    LT, // `<`
-    PIPE, // `|`
+    ASSIGN,  // `=`
+    COMP,    // `==`
+    GT,      // `>`
+    LT,      // `<`
+    PIPE,    // `|`
     COMMENT, // `@`
-    DOLLAR, // `$`
-    COMMA, // `,`
+    DOLLAR,  // `$`
+    COMMA,   // `,`
 }
 
-pub fn keyword_get_tok(k: &Vec<char>) -> Option<Tokens> {
-    match k.into_iter().collect::<String>().as_str() {
+pub fn keyword_get_tok(k: &[char]) -> Option<Tokens> {
+    match k.iter().collect::<String>().as_str() {
         "let" => Some(Tokens::LET),
         "case" => Some(Tokens::CASE),
         "for" => Some(Tokens::FOR),
@@ -70,6 +71,6 @@ pub fn keyword_get_tok(k: &Vec<char>) -> Option<Tokens> {
         "ignore" => Some(Tokens::IGNORE),
         "write" => Some(Tokens::WRITE),
         "writeln" => Some(Tokens::WRITELN),
-        _ => None
+        _ => None,
     }
 }
