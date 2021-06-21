@@ -11,11 +11,17 @@ macro_rules! get_val {
                 break;
             }
         }
+        $self.back()
     };
 }
 
 fn is_ch_valid(c: &char) -> bool {
     c.is_alphabetic() || c == &'_'
+}
+
+fn is_valid_math_symbol(expr: &char) -> bool {
+    expr.is_numeric() ||
+    expr == &'.'
 }
 
 pub struct Scanner {
@@ -74,7 +80,7 @@ impl Scanner {
             '%' => Tok::PERCENT,
             '>' => Tok::GT,
             '<' => Tok::LT,
-            '=' => match self.raw[self.pos + 1] {
+            '=' => match self.raw[self.pos] {
                 '=' => {
                     self.next();
                     Tok::COMP
@@ -85,6 +91,7 @@ impl Scanner {
             ',' => Tok::COMMA,
             ':' => Tok::COLON,
             ';' => Tok::SEMICOLON,
+            '.' => Tok::POINT,
 
             '(' => Tok::LPAREN,
             ')' => Tok::RPAREN,
@@ -98,23 +105,27 @@ impl Scanner {
                 let ch = self.ch;
                 self.next();
                 get_val!(self; ch == self.ch||self.ch == '#' => str_vec);
+                self.next();
                 Tok::STRING(str_vec)
             }
-            _ => {
-                if is_ch_valid(&self.ch) {
-                    get_val!(self; !is_ch_valid(&self.ch) => ident);
-                    self.back();
-                    match keyword_get_tok(&ident) {
-                        Some(v) => v,
-                        None => Tok::IDENT(ident),
-                    }
-                } else if self.ch.is_numeric() {
-                    get_val!(self; !self.ch.is_numeric() => num);
-                    self.back();
-                    Tok::NUM(num)
-                } else {
-                    no_lang::err!(self.ch, self.line => 0)
+            c if is_ch_valid(&c) => {
+                get_val!(self; !is_ch_valid(&self.ch) => ident);
+                match keyword_get_tok(&ident) {
+                    Some(v) => v,
+                    None => Tok::IDENT(ident),
                 }
+            },
+            c if is_valid_math_symbol(&c) => {
+                get_val!(self; !is_valid_math_symbol(&self.ch) => num);
+                let val = num
+                    .iter()
+                    .collect::<String>()
+                    .parse::<f64>()
+                    .expect(&format!("error parsing number at line {}", self.line));
+                Tok::NUM(val)
+            },
+            _ => {
+                no_lang::err!(self.ch, self.line => 0)
             }
         }
     }

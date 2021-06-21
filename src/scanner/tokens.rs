@@ -9,7 +9,7 @@ pub enum Tokens {
 
     // value fields
     IDENT(Vec<char>), // identifier, like: let main = 1
-    NUM(Vec<char>),   // number
+    NUM(f64), // number
     STRING(Vec<char>),
 
     // reserved keywords
@@ -52,6 +52,7 @@ pub enum Tokens {
     COMMENT, // `@`
     DOLLAR,  // `$`
     COMMA,   // `,`
+    POINT, // `.`
 }
 
 pub fn keyword_get_tok(k: &[char]) -> Option<Tokens> {
