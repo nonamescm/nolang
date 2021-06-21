@@ -3,9 +3,13 @@ use scanner::Scanner;
 
 fn main() {
     let input = "@ comentario
-let main = do writeln 'oi
+let main = do 
+    writeln '
+oi
 tudo bem
-flw' end
+flw
+'
+end
 @ outro comentario".chars().collect();
     let mut lexer = Scanner::new(input);
 

@@ -64,8 +64,7 @@ impl Scanner {
             }
             Tok::NUM(num)
         } else {
-            eprintln!("unrecognized token `{}` at line {}", self.ch, self.line);
-            std::process::exit(1)
+            no_lang::unexpected!(self.ch, self.line => 0)
         };
         self.back();
         val
