@@ -1,16 +1,23 @@
 mod scanner;
 use scanner::Scanner;
+use std::io::{
+    stdout,
+    stdin,
+    Write,
+};
 
-fn main() {
-    let input = "
-let main = do
-    writeln 'Oi!! Tudo bem com você?'
-end @ this is a function"
-        .chars()
-        .collect();
-    let mut lexer = Scanner::new(input);
+fn main() -> Result<(), std::io::Error> {
+    loop {
+        print!(">>> ");
+        stdout().flush()?;
 
-    for v in lexer.start().into_iter() {
-        println!("{:?}", v)
+        let mut input = String::new();
+        stdin().read_line(&mut input)?;
+
+        let mut lexer = Scanner::new(input.chars().collect());
+
+        for v in lexer.start().into_iter() {
+            println!("{:?}", v)
+        }
     }
 }
