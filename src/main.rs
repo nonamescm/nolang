@@ -2,15 +2,10 @@ mod scanner;
 use scanner::Scanner;
 
 fn main() {
-    let input = "@ comentario
-let main = do 
-    writeln '
-oi
-tudo bem
-flw
-'
-end
-@ outro comentario"
+    let input = "
+let main = do
+    writeln 'Oi!! Tudo bem com você?'
+end @ this is a function"
         .chars()
         .collect();
     let mut lexer = Scanner::new(input);

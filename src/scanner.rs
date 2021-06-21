@@ -1,7 +1,20 @@
 mod tokens;
 use tokens::{keyword_get_tok, Tokens as Tok};
 
-fn is_valid_letter(c: &char) -> bool {
+macro_rules! get_val {
+    ($self:expr; $cond:expr => $create:ident) => {
+        let mut $create = vec![];
+        loop {
+            $create.push($self.ch);
+            $self.next();
+            if $cond {
+                break;
+            }
+        }
+    };
+}
+
+fn is_ch_valid(c: &char) -> bool {
     c.is_alphabetic() || c == &'_'
 }
 
@@ -34,37 +47,6 @@ impl Scanner {
     fn back(&mut self) {
         self.pos -= 1;
         self.ch = self.raw[self.pos - 1];
-    }
-
-    fn get_val(&mut self) -> Tok {
-        let val = if is_valid_letter(&self.ch) {
-            let mut ident = vec![];
-            loop {
-                ident.push(self.ch);
-                self.next();
-                if !is_valid_letter(&self.ch) {
-                    break;
-                }
-            }
-            match keyword_get_tok(&ident) {
-                Some(v) => v,
-                None => Tok::IDENT(ident),
-            }
-        } else if self.ch.is_numeric() {
-            let mut num = vec![];
-            loop {
-                num.push(self.ch);
-                self.next();
-                if self.ch.is_numeric() {
-                    break;
-                }
-            }
-            Tok::NUM(num)
-        } else {
-            no_lang::unexpected!(self.ch, self.line => 0)
-        };
-        self.back();
-        val
     }
 
     fn ignore_comment(&mut self) -> Tok {
@@ -114,15 +96,26 @@ impl Scanner {
             '$' => Tok::DOLLAR,
             '\'' | '"' => {
                 let ch = self.ch;
-                let mut str_vec = vec![];
                 self.next();
-                while self.ch != ch {
-                    str_vec.push(self.ch);
-                    self.next()
-                }
+                get_val!(self; ch == self.ch||self.ch == '#' => str_vec);
                 Tok::STRING(str_vec)
             }
-            _ => self.get_val(),
+            _ => {
+                if is_ch_valid(&self.ch) {
+                    get_val!(self; !is_ch_valid(&self.ch) => ident);
+                    self.back();
+                    match keyword_get_tok(&ident) {
+                        Some(v) => v,
+                        None => Tok::IDENT(ident),
+                    }
+                } else if self.ch.is_numeric() {
+                    get_val!(self; !self.ch.is_numeric() => num);
+                    self.back();
+                    Tok::NUM(num)
+                } else {
+                    no_lang::err!(self.ch, self.line => 0)
+                }
+            }
         }
     }
 
