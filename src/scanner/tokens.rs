@@ -3,7 +3,6 @@
 pub enum Tokens {
     // reserved fields
     EOF,
-    UNKNOWN,
     SPACE,
     NEWLINE,
 

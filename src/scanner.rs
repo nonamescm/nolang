@@ -9,7 +9,7 @@ fn is_valid_letter(c: &char) -> bool {
 }
 
 pub struct Scanner {
-    // line: usize,
+    line: usize,
     pos: usize,
     raw: Vec<char>,
     ch: char
@@ -18,16 +18,16 @@ pub struct Scanner {
 impl Scanner {
     pub fn new(input: Vec<char>) -> Self {
         Self {
-            ch: 'ł',
+            ch: '#',
             raw: input,
             pos: 0,
-            // line: 0
+            line: 1
         }
     }
 
     fn next(&mut self) {
         self.ch = match self.pos >= self.raw.len() {
-            true => 'ł',
+            true => '#',
             _ => self.raw[self.pos]
         };
 
@@ -64,29 +64,30 @@ impl Scanner {
             }
             Tok::NUM(num)
         } else {
-            Tok::UNKNOWN
+            eprintln!("unrecognized token `{}` at line {}", self.ch, self.line);
+            std::process::exit(1)
         };
         self.back();
         val
     }
 
     fn ignore_comment(&mut self) -> Tok {
-        let mut last_tok = self.get_tok();
-        loop {
-            match last_tok {
-                Tok::NEWLINE|Tok::EOF => break,
-                _ => last_tok = self.get_tok()
-            }
+        while self.ch != '\n' && self.ch != '#' {
+            self.next();
         }
-        last_tok
+        self.next();
+        self.get_tok()
     }
 
     fn get_tok(&mut self) -> Tok {
         match self.ch {
-            'ł' => Tok::EOF,
+            '#' => Tok::EOF,
+
             ' '|'\r'|'\t' => Tok::SPACE,
-            '\n' => Tok::NEWLINE,
-            '#' => self.ignore_comment(),
+            '\n' => {
+                self.line += 1;
+                Tok::NEWLINE
+            },
 
             '+' => Tok::PLUS,
             '-' => Tok::MINUS,
@@ -109,7 +110,7 @@ impl Scanner {
             '{' => Tok::LBRACE,
             '}' => Tok::RBRACE,
 
-            '@' => Tok::COMMENT,
+            '@' => self.ignore_comment(),
             '|' => Tok::PIPE,
             '$' => Tok::DOLLAR,
             '\''|'"' => {
@@ -132,7 +133,6 @@ impl Scanner {
         loop {
             let tok = match self.get_tok() {
                 Tok::EOF => break,
-                Tok::UNKNOWN => panic!("unrecognized token"),
                 e => e
             };
             match tok {
