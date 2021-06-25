@@ -15,7 +15,11 @@ fn main() -> Result<(), std::io::Error> {
         stdin().read_line(&mut input)?;
 
         let mut lexer = Lexer::new(input.chars().collect());
-        
-        println!("{:?}", lexer.start());
+
+        println!("[");
+        for element in lexer.start().iter() {
+            println!("  {:?},", element)
+        }
+        println!("]");
     }
 }
