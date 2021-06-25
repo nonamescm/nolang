@@ -6,7 +6,7 @@ pub enum Tokens {
     Newline,
 
     // value fields
-    Ident(Vec<char>), // identifier, like: let main = 1
+    Ident(String), // identifier, like: let main = 1
     Number(f64), // number
     String(String),
 
@@ -53,8 +53,8 @@ pub enum Tokens {
     Point,   // `.`
 }
 
-pub fn keyword_get_tok(k: &[char]) -> Option<Tokens> {
-    match k.iter().collect::<String>().as_str() {
+pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
+    match k {
         "not" => Some(Tokens::Not),
         "return" => Some(Tokens::Return),
         "let" => Some(Tokens::Let),

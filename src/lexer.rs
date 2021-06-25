@@ -3,12 +3,12 @@ use tokens::{keyword_get_tok, Tokens as Tok};
 
 macro_rules! get_val {
     ($self:expr; $cond:expr => $create:ident) => {
-        let mut $create = vec![];
+        let mut $create = String::new();
         loop {
             $create.push($self.ch);
             $self.next();
             if $cond {
-                break;
+                break
             }
         }
         $self.back()
@@ -106,10 +106,11 @@ impl Lexer {
                 self.next();
                 get_val!(self; ch == self.ch||self.ch == '#' => str_vec);
                 self.next();
-                Tok::String(str_vec.iter().collect())
+                Tok::String(str_vec)
             }
             c if is_ch_valid(&c) => {
                 get_val!(self; !is_ch_valid(&self.ch) => ident);
+
                 match keyword_get_tok(&ident) {
                     Some(v) => v,
                     None => Tok::Ident(ident),
@@ -118,8 +119,6 @@ impl Lexer {
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; !is_valid_math_symbol(&self.ch) => num);
                 let val = num
-                    .iter()
-                    .collect::<String>()
                     .parse::<f64>()
                     .unwrap_or_else(|_| panic!("error parsing number at line {}", self.line));
                 Tok::Number(val)
