@@ -1,5 +1,5 @@
-mod scanner;
-use scanner::Scanner;
+mod lexer;
+use lexer::Lexer;
 use std::io::{
     stdout,
     stdin,
@@ -8,16 +8,14 @@ use std::io::{
 
 fn main() -> Result<(), std::io::Error> {
     loop {
-        print!(">>> ");
+        print!("NoLang(REPL)> ");
         stdout().flush()?;
 
         let mut input = String::new();
         stdin().read_line(&mut input)?;
 
-        let mut lexer = Scanner::new(input.chars().collect());
-
-        for v in lexer.start().into_iter() {
-            println!("{:?}", v)
-        }
+        let mut lexer = Lexer::new(input.chars().collect());
+        
+        println!("{:?}", lexer.start());
     }
 }

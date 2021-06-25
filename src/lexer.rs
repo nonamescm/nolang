@@ -24,14 +24,14 @@ fn is_valid_math_symbol(expr: &char) -> bool {
     expr == &'.'
 }
 
-pub struct Scanner {
+pub struct Lexer {
     line: usize,
     pos: usize,
     raw: Vec<char>,
     ch: char,
 }
 
-impl Scanner {
+impl Lexer {
     pub fn new(input: Vec<char>) -> Self {
         Self {
             ch: '#',
@@ -65,54 +65,54 @@ impl Scanner {
 
     fn get_tok(&mut self) -> Tok {
         match self.ch {
-            '#' => Tok::EOF,
+            '#' => Tok::Eof,
 
-            ' ' | '\r' | '\t' => Tok::SPACE,
+            ' ' | '\r' | '\t' => Tok::Space,
             '\n' => {
                 self.line += 1;
-                Tok::NEWLINE
+                Tok::Newline
             }
 
-            '+' => Tok::PLUS,
-            '-' => Tok::MINUS,
-            '*' => Tok::ASTERISK,
-            '/' => Tok::SLASH,
-            '%' => Tok::PERCENT,
-            '>' => Tok::GT,
-            '<' => Tok::LT,
+            '+' => Tok::Plus,
+            '-' => Tok::Minus,
+            '*' => Tok::Asterisk,
+            '/' => Tok::Slash,
+            '%' => Tok::Percent,
+            '>' => Tok::Gt,
+            '<' => Tok::Lt,
             '=' => match self.raw[self.pos] {
                 '=' => {
                     self.next();
-                    Tok::COMP
+                    Tok::Comp
                 }
-                _ => Tok::ASSIGN,
+                _ => Tok::Assign,
             },
 
-            ',' => Tok::COMMA,
-            ':' => Tok::COLON,
-            ';' => Tok::SEMICOLON,
-            '.' => Tok::POINT,
+            ',' => Tok::Comma,
+            ':' => Tok::Colon,
+            ';' => Tok::Semicolon,
+            '.' => Tok::Point,
 
-            '(' => Tok::LPAREN,
-            ')' => Tok::RPAREN,
-            '{' => Tok::LBRACE,
-            '}' => Tok::RBRACE,
+            '(' => Tok::Lparen,
+            ')' => Tok::Rparen,
+            '{' => Tok::Lbrace,
+            '}' => Tok::Rbrace,
 
             '@' => self.ignore_comment(),
-            '|' => Tok::PIPE,
-            '$' => Tok::DOLLAR,
+            '|' => Tok::Pipe,
+            '$' => Tok::Dollar,
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
                 get_val!(self; ch == self.ch||self.ch == '#' => str_vec);
                 self.next();
-                Tok::STRING(str_vec)
+                Tok::String(str_vec.iter().collect())
             }
             c if is_ch_valid(&c) => {
                 get_val!(self; !is_ch_valid(&self.ch) => ident);
                 match keyword_get_tok(&ident) {
                     Some(v) => v,
-                    None => Tok::IDENT(ident),
+                    None => Tok::Ident(ident),
                 }
             },
             c if is_valid_math_symbol(&c) => {
@@ -121,8 +121,8 @@ impl Scanner {
                     .iter()
                     .collect::<String>()
                     .parse::<f64>()
-                    .expect(&format!("error parsing number at line {}", self.line));
-                Tok::NUM(val)
+                    .unwrap_or_else(|_| panic!("error parsing number at line {}", self.line));
+                Tok::Number(val)
             },
             _ => {
                 no_lang::err!(self.ch, self.line => 0)
@@ -135,11 +135,11 @@ impl Scanner {
         let mut vec_tok = vec![];
         loop {
             let tok = match self.get_tok() {
-                Tok::EOF => break,
+                Tok::Eof => break,
                 e => e,
             };
             match tok {
-                Tok::SPACE => (),
+                Tok::Space => (),
                 _ => vec_tok.push(tok),
             }
             self.next();
