@@ -16,5 +16,5 @@ macro_rules! err {
     (custom $arg:expr => $val:expr) => {{
         eprintln!("{}", $arg);
         std::process::exit($val)
-    }}
+    }};
 }

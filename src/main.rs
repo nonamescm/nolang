@@ -1,19 +1,15 @@
 mod lexer;
 use lexer::Lexer;
 use std::{
-    io::{
-        stdout,
-        stdin,
-        Write,
-    },
     env::args,
     fs::read_to_string,
+    io::{stdin, stdout, Write},
 };
 
-type IoResult = Result<(), std::io::Error>;
+type IOResult = Result<(), std::io::Error>;
 
-fn main() -> IoResult {
-    if args().collect::<Vec<String>>().len() < 2 {
+fn main() -> IOResult {
+    if args().count() < 2 {
         repl()?;
     } else {
         interpret()?;
@@ -21,15 +17,13 @@ fn main() -> IoResult {
     Ok(())
 }
 
-fn interpret() -> IoResult {
+fn interpret() -> IOResult {
     let mut arguments = args();
     arguments.next();
 
     for file in arguments {
         println!("{}", file);
-        let lexer = Lexer::new(
-            read_to_string(file)?.chars().collect()
-        ).start();
+        let lexer = Lexer::new(read_to_string(file)?.chars().collect()).start();
 
         if !lexer.is_empty() {
             println!("[");
@@ -42,7 +36,7 @@ fn interpret() -> IoResult {
     Ok(())
 }
 
-fn repl() -> IoResult {
+fn repl() -> IOResult {
     loop {
         print!("NoLang(REPL)> ");
         stdout().flush()?;

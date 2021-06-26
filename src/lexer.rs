@@ -8,7 +8,7 @@ macro_rules! get_val {
             $create.push($self.ch);
             $self.next();
             if $cond {
-                break
+                break;
             }
         }
         $self.back()
@@ -20,8 +20,7 @@ fn is_ch_valid(c: &char) -> bool {
 }
 
 fn is_valid_math_symbol(expr: &char) -> bool {
-    expr.is_numeric() ||
-    expr == &'.'
+    expr.is_numeric() || expr == &'.'
 }
 
 pub struct Lexer {
@@ -106,10 +105,12 @@ impl Lexer {
                 get_val!(self; !is_ch_valid(&self.ch) => ident);
 
                 match keyword_get_tok(&ident) {
-                    Some(ident) => no_lang::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1),
+                    Some(ident) => {
+                        no_lang::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1)
+                    }
                     None => Tok::LocalIdent(ident),
                 }
-            },
+            }
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
@@ -124,14 +125,14 @@ impl Lexer {
                     Some(v) => v,
                     None => Tok::Ident(ident),
                 }
-            },
+            }
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; !is_valid_math_symbol(&self.ch) => num);
                 let val = num
                     .parse::<f64>()
                     .unwrap_or_else(|_| panic!("error parsing number at line {}", self.line));
                 Tok::Number(val)
-            },
+            }
             _ => {
                 no_lang::err!(unexpected self.ch, self.line => 1)
             }

@@ -7,8 +7,8 @@ pub enum Tokens {
 
     // value fields
     LocalIdent(String), // local identifier, like: $symbol = 20
-    Ident(String), // identifier, like: let main = 1
-    Number(f64), // number
+    Ident(String),      // identifier, like: let main = 1
+    Number(f64),        // number
     String(String),
 
     // reserved keywords
@@ -45,13 +45,13 @@ pub enum Tokens {
     Lparen,
     Rbrace,
     Lbrace,
-    Assign,  // `=`
-    Comp,    // `==`
-    Gt,      // `>`
-    Lt,      // `<`
-    Pipe,    // `|`
-    Comma,   // `,`
-    Point,   // `.`
+    Assign, // `=`
+    Comp,   // `==`
+    Gt,     // `>`
+    Lt,     // `<`
+    Pipe,   // `|`
+    Comma,  // `,`
+    Point,  // `.`
 }
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
