@@ -5,11 +5,11 @@ macro_rules! get_val {
     ($self:expr; $cond:expr => $create:ident) => {
         let mut $create = String::new();
         loop {
-            $create.push($self.ch);
-            $self.next();
             if $cond {
                 break;
             }
+            $create.push($self.ch);
+            $self.next();
         }
         $self.back()
     };
