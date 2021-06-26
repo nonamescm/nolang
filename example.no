@@ -41,7 +41,7 @@ end
 @        you access them using the $identifier syntax
 
 @ for statements:
-for $i in 1..200 do
+for $i in range(1, 200) do
     writeln $i
 end
 
@@ -51,6 +51,6 @@ let is_odd = ($number) do
     $number % 2 == 1
 end
 
-for $i in 1..200 do
+for $i in range(1, 200) do
     writeln is_odd($i)
 end

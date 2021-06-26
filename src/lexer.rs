@@ -59,6 +59,7 @@ impl Lexer {
         while self.ch != '\n' && self.ch != '#' {
             self.next();
         }
+        self.line += 1;
         self.next();
         self.get_tok()
     }
