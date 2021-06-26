@@ -1,7 +1,10 @@
+mod colors;
 mod lexer;
+
+use colors::Colors;
 use lexer::Lexer;
 use std::{
-    env::args,
+    env::{args, var},
     fs::read_to_string,
     io::{stdin, stdout, Write},
 };
@@ -37,8 +40,15 @@ fn interpret() -> IOResult {
 }
 
 fn repl() -> IOResult {
+    use Colors::*;
     loop {
-        print!("NoLang(REPL)> ");
+        print!(
+            "{}({}){} ",
+            Colors::colorize(Purple, &var("USER").unwrap_or("REPL".to_string())),
+            Colors::colorize(LightBlue, "NoLang"),
+            Colors::colorize(Green, ">")
+        );
+
         stdout().flush()?;
 
         let mut input = String::new();
