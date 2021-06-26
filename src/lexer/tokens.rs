@@ -6,6 +6,7 @@ pub enum Tokens {
     Newline,
 
     // value fields
+    LocalIdent(String), // local identifier, like: $symbol = 20
     Ident(String), // identifier, like: let main = 1
     Number(f64), // number
     String(String),
@@ -17,6 +18,7 @@ pub enum Tokens {
     Let,  // declare function
     Case, // switch-case
     As,
+    In,
     Return,
     Do,
     End,
@@ -48,13 +50,13 @@ pub enum Tokens {
     Gt,      // `>`
     Lt,      // `<`
     Pipe,    // `|`
-    Dollar,  // `$`
     Comma,   // `,`
     Point,   // `.`
 }
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
     match k {
+        "in" => Some(Tokens::In),
         "not" => Some(Tokens::Not),
         "return" => Some(Tokens::Return),
         "let" => Some(Tokens::Let),

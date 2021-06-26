@@ -101,7 +101,15 @@ impl Lexer {
 
             '@' => self.ignore_comment(),
             '|' => Tok::Pipe,
-            '$' => Tok::Dollar,
+            '$' => {
+                self.next();
+                get_val!(self; !is_ch_valid(&self.ch) => ident);
+
+                match keyword_get_tok(&ident) {
+                    Some(ident) => no_lang::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1),
+                    None => Tok::LocalIdent(ident),
+                }
+            },
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
@@ -125,7 +133,7 @@ impl Lexer {
                 Tok::Number(val)
             },
             _ => {
-                no_lang::err!(self.ch, self.line => 0)
+                no_lang::err!(unexpected self.ch, self.line => 1)
             }
         }
     }
