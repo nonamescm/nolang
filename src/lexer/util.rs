@@ -1,5 +1,5 @@
 pub fn is_ch_valid(c: &char) -> bool {
-    c.is_alphabetic() || c == &'_'
+    c.is_ascii_alphanumeric() || c == &'_'
 }
 
 pub fn is_valid_math_symbol(expr: &char) -> bool {

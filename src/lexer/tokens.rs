@@ -15,6 +15,7 @@ pub enum Tokens {
     False,
     None, // Null value
     Let,  // declare function/variable
+    Defun,
     Case, // switch-case
     As,
     In,
@@ -33,8 +34,8 @@ pub enum Tokens {
     Writeln, // println statement
 
     // Symbols
-    Colon,     // `:`
     Semicolon, // `;`
+    Interrogation, // `?`
     Minus,
     Plus,
     Asterisk, // `*`
@@ -51,10 +52,13 @@ pub enum Tokens {
     Pipe,   // `|`
     Comma,  // `,`
     Point,  // `.`
+    Concat, // `..`
+    Underline, // `_` used as statement on patterns
 }
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
     match k {
+        "defun" => Some(Tokens::Defun),
         "in" => Some(Tokens::In),
         "not" => Some(Tokens::Not),
         "return" => Some(Tokens::Return),
@@ -73,6 +77,7 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "ignore" => Some(Tokens::Ignore),
         "write" => Some(Tokens::Write),
         "writeln" => Some(Tokens::Writeln),
+        "_" => Some(Tokens::Underline),
         _ => None,
     }
 }
