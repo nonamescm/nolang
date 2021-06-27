@@ -1,7 +1,6 @@
 #[derive(PartialEq, Debug)]
 pub enum Tokens {
     // reserved fields
-    Eof,
     Space,
     Newline,
 

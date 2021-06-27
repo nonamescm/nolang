@@ -15,7 +15,7 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: Vec<char>) -> Self {
         Self {
-            ch: '#',
+            ch: '|',
             raw: input,
             pos: 0,
             line: 1,
@@ -23,12 +23,10 @@ impl Lexer {
     }
 
     fn next(&mut self) {
-        self.ch = match self.pos >= self.raw.len() {
-            true => '#',
-            _ => self.raw[self.pos],
-        };
-
-        self.pos += 1;
+        if self.pos < self.raw.len() {
+            self.ch = self.raw[self.pos];
+            self.pos += 1;
+        }
     }
 
     fn back(&mut self) {
@@ -37,7 +35,7 @@ impl Lexer {
     }
 
     fn ignore_comment(&mut self) -> Tok {
-        while self.ch != '\n' && self.ch != '#' {
+        while self.ch != '\n' {
             self.next();
         }
         self.line += 1;
@@ -47,8 +45,6 @@ impl Lexer {
 
     fn get_tok(&mut self) -> Tok {
         match self.ch {
-            '#' => Tok::Eof,
-
             ' ' | '\r' | '\t' => Tok::Space,
             '\n' => {
                 self.line += 1;
@@ -96,7 +92,7 @@ impl Lexer {
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
-                get_val!(self; ch == self.ch||self.ch == '#' => str_vec);
+                get_val!(self; ch == self.ch => str_vec);
                 self.next();
                 Tok::String(str_vec)
             }
@@ -124,14 +120,10 @@ impl Lexer {
     pub fn start(&mut self) -> Vec<Tok> {
         self.next();
         let mut vec_tok = vec![];
-        loop {
-            let tok = match self.get_tok() {
-                Tok::Eof => break,
-                e => e,
-            };
-            match tok {
+        while self.pos < self.raw.len() {
+            match self.get_tok() {
                 Tok::Space => (),
-                _ => vec_tok.push(tok),
+                t => vec_tok.push(t),
             }
             self.next();
         }

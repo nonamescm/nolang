@@ -15,7 +15,12 @@ macro_rules! get_val {
                 break;
             }
             $create.push($self.ch);
+            let pos = $self.pos;
             $self.next();
+
+            if pos == $self.pos {
+                no_lang::err!(custom format!("unclosed delimiter at line {}", $self.line) => 1)
+            }
         }
         $self.back()
     };
