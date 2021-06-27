@@ -44,7 +44,7 @@ fn repl() -> IOResult {
     loop {
         print!(
             "{}({}){} ",
-            Colors::colorize(Purple, &var("USER").unwrap_or("REPL".to_string())),
+            Colors::colorize(Purple, &var("USER").unwrap_or_else(|_| "REPL".to_string())),
             Colors::colorize(LightBlue, "NoLang"),
             Colors::colorize(Green, ">")
         );
