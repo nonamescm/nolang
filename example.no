@@ -10,7 +10,7 @@ let my_func = defun(:arg1 :arg2) do
 
 @    the last expression in a function is it returns
 @    you can also use an explicity return if you want to return early
-@   if you want to return none, you should use a syntax like: `expression|ignore`
+@    if you want to return none, you should use a syntax like: `expression|ignore`
 end
 
 my_func "cool"
