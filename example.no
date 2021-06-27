@@ -4,12 +4,13 @@ let my_variable = "hey"
 
 @ function
 @ block-scoped variables use the :identifier syntax
-let my_func = defun(:arg) do
-    writeln :arg
-    :arg
+let my_func = defun(:arg1 :arg2) do
+    writeln :arg1
+    :arg2
+
 @    the last expression in a function is it returns
-@        you can also use an explicity return if you want to return early
-@        if you want to return none, you should use a syntax like: `expression|ignore`
+@    you can also use an explicity return if you want to return early
+@   if you want to return none, you should use a syntax like: `expression|ignore`
 end
 
 my_func "cool"
