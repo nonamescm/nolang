@@ -15,7 +15,7 @@ pub enum Tokens {
     True,
     False,
     None, // Null value
-    Let,  // declare function
+    Let,  // declare function/variable
     Case, // switch-case
     As,
     In,
