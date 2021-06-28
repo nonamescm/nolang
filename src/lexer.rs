@@ -90,10 +90,10 @@ impl Lexer {
 
                 match keyword_get_tok(&ident) {
                     Some(ident) => {
-                        no_lang::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1)
+                        nolang::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1)
                     }
                     None if !ident.is_empty() => Tok::LocalIdent(ident),
-                    None => no_lang::err!(unexpected self.ch, self.line => 1)
+                    None => nolang::err!(unexpected self.ch, self.line => 1)
                 }
             }
             '\'' | '"' => {
@@ -107,12 +107,12 @@ impl Lexer {
                 get_val!(self; !is_valid_math_symbol(&self.ch) => num);
 
                 if is_ch_valid(&self.raw[self.pos]) {
-                    no_lang::err!(unexpected self.raw[self.pos], self.line => 1)
+                    nolang::err!(unexpected self.raw[self.pos], self.line => 1)
                 }
 
                 let val = num
                     .parse::<f64>()
-                    .unwrap_or_else(|_| no_lang::err!(custom format!("error parsing number at line {}", self.line) => 1));
+                    .unwrap_or_else(|_| nolang::err!(custom format!("error parsing number at line {}", self.line) => 1));
                 Tok::Number(val)
             }
             c if is_ch_valid(&c) => {
@@ -124,7 +124,7 @@ impl Lexer {
                 }
             }
             _ => {
-                no_lang::err!(unexpected self.ch, self.line => 1)
+                nolang::err!(unexpected self.ch, self.line => 1)
             }
         }
     }

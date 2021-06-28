@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "no_lang"
+name = "nolang"
 version = "0.1.0"
