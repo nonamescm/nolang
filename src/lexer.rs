@@ -112,7 +112,7 @@ impl Lexer {
 
                 let val = num
                     .parse::<f64>()
-                    .unwrap_or_else(|_| panic!("error parsing number at line {}", self.line));
+                    .unwrap_or_else(|_| no_lang::err!(custom format!("error parsing number at line {}", self.line) => 1));
                 Tok::Number(val)
             }
             c if is_ch_valid(&c) => {
