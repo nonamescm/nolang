@@ -103,14 +103,6 @@ impl Lexer {
                 self.next();
                 Tok::String(str_vec)
             }
-            c if is_ch_valid(&c) => {
-                get_val!(self; !is_ch_valid(&self.ch) => ident);
-
-                match keyword_get_tok(&ident) {
-                    Some(v) => v,
-                    None => Tok::Ident(ident),
-                }
-            }
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; !is_valid_math_symbol(&self.ch) => num);
 
@@ -122,6 +114,14 @@ impl Lexer {
                     .parse::<f64>()
                     .unwrap_or_else(|_| panic!("error parsing number at line {}", self.line));
                 Tok::Number(val)
+            }
+            c if is_ch_valid(&c) => {
+                get_val!(self; !is_ch_valid(&self.ch) => ident);
+
+                match keyword_get_tok(&ident) {
+                    Some(v) => v,
+                    None => Tok::Ident(ident),
+                }
             }
             _ => {
                 no_lang::err!(unexpected self.ch, self.line => 1)

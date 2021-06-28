@@ -12,6 +12,7 @@ writeln(function(1 2))
 
 let callback_function = defun(:func)
 	:func(0.1)
+	none @ returns none
 end
 
 while true do
