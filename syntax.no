@@ -1,0 +1,31 @@
+@ this file define the syntax used in the no programming language, also known as nolang
+@ variables declared with let are globals and imutables, variables declared with `:name` are local and mutable
+let function = defun(:arg1 :arg2)
+	case :arg1 do
+		:arg2? "args are the same";
+		"example"? "first arg is 'example'";
+		_? "args are different";
+	end @ this function returns what this match returns
+end
+
+writeln(function(1 2))
+
+let callback_function = defun(:func)
+	:func(0.1)
+end
+
+while true do
+	writeln("ok")
+end
+
+let print_all_elements_on_array = defun(:array)
+	for :item in :array do
+		writeln(:item)
+	end
+end
+
+print_all_elements_on_array( { 1 2 3 4 5 } )
+
+callback_function(defun(:number)
+	writeln("hello "..:number)
+end)

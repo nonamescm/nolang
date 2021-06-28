@@ -27,7 +27,6 @@ pub enum Tokens {
     Or,
     Not,
     And,
-    Ignore,
 
     // reserved statements
     Write,   // print statement
@@ -74,7 +73,6 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "and" => Some(Tokens::And),
         "or" => Some(Tokens::Or),
         "as" => Some(Tokens::As),
-        "ignore" => Some(Tokens::Ignore),
         "write" => Some(Tokens::Write),
         "writeln" => Some(Tokens::Writeln),
         "_" => Some(Tokens::Underline),
