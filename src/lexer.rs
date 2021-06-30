@@ -64,7 +64,14 @@ impl Lexer {
                     Tok::Comp
                 }
                 _ => Tok::Assign,
-            },
+            }
+            '~' => match self.raw[self.pos] {
+                '=' => {
+                    self.next();
+                    Tok::Comp
+                }
+                _ => Tok::Not, // ~ = not, it's just a syntax sugar
+            }
 
             ',' => Tok::Comma,
             ';' => Tok::Semicolon,
