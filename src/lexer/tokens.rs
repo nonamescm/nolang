@@ -34,7 +34,6 @@ pub enum Tokens {
 
     // Symbols
     Semicolon, // `;`
-    Interrogation, // `?`
     Minus,
     Plus,
     Asterisk, // `*`

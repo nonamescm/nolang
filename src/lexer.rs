@@ -5,20 +5,22 @@ mod util;
 use tokens::{keyword_get_tok, Tokens as Tok};
 use util::*;
 
-pub struct Lexer {
+pub struct Lexer<T> {
     line: usize,
     pos: usize,
     raw: Vec<char>,
     ch: char,
+    pub tokens: T
 }
 
-impl Lexer {
+impl Lexer<Box<dyn Iterator<Item = Tok>>> {
     pub fn new(input: Vec<char>) -> Self {
         Self {
             ch: '|',
             raw: input,
             pos: 0,
             line: 1,
+            tokens: Box::new(vec![].into_iter())
         }
     }
 
@@ -44,7 +46,7 @@ impl Lexer {
     }
 
     fn get_tok(&mut self) -> Tok {
-        match self.ch {
+        match &self.ch {
             ' ' | '\r' | '\t' => Tok::Space,
             '\n' => {
                 self.line += 1;
@@ -82,7 +84,6 @@ impl Lexer {
                 }
                 _ => Tok::Point
             },
-            '?' => Tok::Interrogation,
 
             '(' => Tok::Lparen,
             ')' => Tok::Rparen,
@@ -136,7 +137,7 @@ impl Lexer {
         }
     }
 
-    pub fn start(&mut self) -> Vec<Tok> {
+    pub fn lex(&mut self) {
         self.next();
         let mut vec_tok = vec![];
         while self.pos < self.raw.len() {
@@ -146,6 +147,6 @@ impl Lexer {
             }
             self.next();
         }
-        vec_tok
+        self.tokens = Box::new(vec_tok.into_iter())
     }
 }
