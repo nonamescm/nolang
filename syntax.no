@@ -1,6 +1,6 @@
 @ this file define the syntax used in the no programming language, also known as nolang
 @ variables declared with let are globals and imutables, variables declared with `:name` are local and mutable
-let function = defun(:arg1 :arg2)
+let function = defun(:arg1; :arg2)
 	if :arg1 == :arg2 do
 		return "args are the same"
 	elif :arg1 == "example" do
@@ -14,7 +14,7 @@ while true do
 	writeln("ok")
 end
 
-writeln(function(1 2))
+writeln(function(1; 2))
 
 let callback_function = defun(:func)
 	:func(0.1)
@@ -31,4 +31,4 @@ let print_all_elements_on_array = defun(:array)
 	end
 end
 
-print_all_elements_on_array( { 1 2 3 4 5 } )
+print_all_elements_on_array( { 1; 2; 3; 4; 5 } )
