@@ -45,6 +45,7 @@ pub enum Tokens {
     Lbrace,
     Assign, // `=`
     Comp,   // `==`
+    Different, // `~=` or `!=` in other languages
     Gt,     // `>`
     Lt,     // `<`
     Pipe,   // `|`

@@ -70,7 +70,7 @@ impl Lexer<Box<dyn Iterator<Item = Tok>>> {
             '~' => match self.raw[self.pos] {
                 '=' => {
                     self.next();
-                    Tok::Comp
+                    Tok::Different
                 }
                 _ => Tok::Not, // ~ = not, it's just a syntax sugar
             }
