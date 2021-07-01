@@ -5,15 +5,15 @@ mod util;
 use tokens::{keyword_get_tok, Tokens as Tok};
 use util::*;
 
-pub struct Lexer<T> {
+pub struct Lexer {
     line: usize,
     pos: usize,
     raw: Vec<char>,
     ch: char,
-    pub tokens: T
+    pub tokens: Box<dyn Iterator<Item = Tok>>
 }
 
-impl Lexer<Box<dyn Iterator<Item = Tok>>> {
+impl Lexer {
     pub fn new(input: Vec<char>) -> Self {
         Self {
             ch: '|',
