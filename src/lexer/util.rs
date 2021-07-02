@@ -19,7 +19,7 @@ macro_rules! get_val {
             $self.next();
 
             if pos == $self.pos {
-                nolang::err!(custom format!("unclosed delimiter at line {}", $self.line) => 1)
+                crate::err!(custom format!("unclosed delimiter at line {}", $self.line) => 1)
             }
         }
         $self.back()

@@ -1,8 +1,5 @@
-mod colors;
-mod lexer;
-
-use colors::Colors;
-use lexer::Lexer;
+use nolang::colors::Colors;
+use nolang::lexer::Lexer;
 use std::{
     env::{args, var},
     fs::read_to_string,

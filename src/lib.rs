@@ -1,3 +1,6 @@
+pub mod lexer;
+pub mod colors;
+
 #[macro_export]
 macro_rules! err {
     // unexpected
