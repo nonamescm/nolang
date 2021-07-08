@@ -1,4 +1,4 @@
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Tokens {
     // reserved fields
     Space,
@@ -53,6 +53,49 @@ pub enum Tokens {
     Point,  // `.`
     Concat, // `..`
     Underline, // `_` used as statement on patterns
+}
+
+impl Tokens {
+    pub fn is_operator(&self) -> bool {
+        matches!(
+            *self,
+            Self::Comp
+            |Self::Different
+            |Self::Gt
+            |Self::Lt
+            |Self::Plus
+            |Self::Minus
+            |Self::Slash
+            |Self::Asterisk
+        )
+    }
+
+    pub fn is_literal(&self) -> bool {
+        matches!(
+            *self,
+            Self::Number(_)
+            |Self::String(_)
+            |Self::True
+            |Self::False
+            |Self::None
+        )
+    }
+
+    pub fn is_unary(&self) -> bool {
+        matches!(
+            *self,
+            Self::Not
+            |Self::Minus
+        )
+    }
+
+    pub fn is_ident(&self) -> bool {
+        matches!(
+            *self,
+            Self::LocalIdent(_)
+            |Self::Ident(_)
+        )
+    }
 }
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
