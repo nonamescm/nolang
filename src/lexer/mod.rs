@@ -1,4 +1,5 @@
 pub mod tokens;
+pub mod parser;
 #[macro_use]
 mod util;
 
@@ -25,10 +26,7 @@ impl Lexer {
         let mut vec_tok = vec![];
 
         while eself.pos < eself.raw.len() {
-            match eself.get_tok() {
-                Tok::Space => (),
-                t => vec_tok.push(t),
-            }
+            vec_tok.push(eself.get_tok());
             eself.next();
         }
 
@@ -153,7 +151,7 @@ impl Lexer {
                 self.next();
                 get_val!(self; ch != self.ch => str_vec);
                 self.next();
-                Tok::String(str_vec)
+                Tok::Str(str_vec)
             }
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; is_valid_math_symbol(&self.ch) => num);
