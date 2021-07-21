@@ -10,25 +10,44 @@ pub struct Lexer {
     pos: usize,
     raw: Vec<char>,
     ch: char,
-    pub tokens: Box<dyn Iterator<Item = Tok>>
 }
 
 impl Lexer {
-    pub fn new(input: Vec<char>) -> Self {
-        Self {
+    pub fn lex(input: String) -> impl Iterator<Item = Tok> {
+        let mut eself = Self {
             ch: '|',
-            raw: input,
+            raw: input.chars().collect(),
             pos: 0,
             line: 1,
-            tokens: Box::new(vec![].into_iter())
+        };
+
+        eself.next();
+        let mut vec_tok = vec![];
+
+        while eself.pos < eself.raw.len() {
+            match eself.get_tok() {
+                Tok::Space => (),
+                t => vec_tok.push(t),
+            }
+            eself.next();
         }
+
+        vec_tok.into_iter()
     }
 
     fn next(&mut self) {
         if self.pos < self.raw.len() {
-            self.ch = self.raw[self.pos];
+            self.ch = self.current();
             self.pos += 1;
         }
+    }
+
+    fn peek(&self, ch: char) -> bool {
+        self.current() == ch
+    }
+
+    fn current(&self) -> char {
+        self.raw[self.pos]
     }
 
     fn back(&mut self) {
@@ -46,76 +65,101 @@ impl Lexer {
     }
 
     fn get_tok(&mut self) -> Tok {
-        match &self.ch {
-            ' ' | '\r' | '\t' => Tok::Space,
+        match self.ch {
+            // Whitespaces
+            ' ' | '\r' | '\t' => {
+                self.next();
+                self.get_tok()
+            }
             '\n' => {
                 self.line += 1;
                 Tok::Newline
             }
 
+            // Mathematical operators
             '+' => Tok::Plus,
             '-' => Tok::Minus,
             '*' => Tok::Asterisk,
             '/' => Tok::Slash,
             '%' => Tok::Percent,
+
+            // Comparators
+            '>' if self.peek('=') => {
+                self.next();
+                Tok::GtOrEq
+            }
             '>' => Tok::Gt,
+            '<' if self.peek('=') => {
+                self.next();
+                Tok::LtOrEq
+            }
             '<' => Tok::Lt,
-            '=' => match self.raw[self.pos] {
-                '=' => {
-                    self.next();
-                    Tok::Comp
-                }
-                _ => Tok::Assign,
+            '=' if self.peek('=') => {
+                self.next();
+                Tok::Comp
             }
-            '~' => match self.raw[self.pos] {
-                '=' => {
-                    self.next();
-                    Tok::Different
-                }
-                _ => Tok::Not, // ~ = not, it's just a syntax sugar
+            '=' if self.peek('>') => {
+                self.next();
+                Tok::ArrowAssign
             }
+            '=' => Tok::Assign,
 
+            '~' if self.peek('=') => {
+                self.next();
+                Tok::Different
+            }
+            '~' => Tok::Not,
+
+            // Separators
             ',' => Tok::Comma,
+            ';' if self.peek(';') => {
+                self.next();
+                Tok::End
+            }
             ';' => Tok::Semicolon,
-            '.' => match self.raw[self.pos] {
-                '.' => {
-                    self.next();
-                    Tok::Concat
-                }
-                _ => Tok::Point
-            },
+            '.' if self.peek('.') => {
+                self.next();
+                Tok::Concat
+            }
+            '.' => Tok::Point,
 
+            // Grouping
             '(' => Tok::Lparen,
             ')' => Tok::Rparen,
             '{' => Tok::Lbrace,
             '}' => Tok::Rbrace,
 
+            // Comment
             '@' => self.ignore_comment(),
+
+            // Special symbols
             '|' => Tok::Pipe,
+
+            // Identifiers and constants
             ':' => {
                 self.next();
-                get_val!(self; !is_ch_valid(&self.ch) => ident);
+                get_val!(self; is_ch_valid(&self.ch) => ident);
 
                 match keyword_get_tok(&ident) {
                     Some(ident) => {
                         crate::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1)
                     }
                     None if !ident.is_empty() => Tok::LocalIdent(ident),
-                    None => crate::err!(unexpected self.ch, self.line => 1)
+                    None => crate::err!(unexpected self.ch, self.line => 1),
                 }
             }
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
-                get_val!(self; ch == self.ch => str_vec);
+                get_val!(self; ch != self.ch => str_vec);
                 self.next();
                 Tok::String(str_vec)
             }
             c if is_valid_math_symbol(&c) => {
-                get_val!(self; !is_valid_math_symbol(&self.ch) => num);
+                get_val!(self; is_valid_math_symbol(&self.ch) => num);
 
-                if is_ch_valid(&self.raw[self.pos]) {
-                    crate::err!(unexpected self.raw[self.pos], self.line => 1)
+                if is_ch_valid(&self.current()) {
+                    crate::err!(unexpected self.current(), self.line => 1)
                 }
 
                 let val = num
@@ -124,29 +168,18 @@ impl Lexer {
                 Tok::Number(val)
             }
             c if is_ch_valid(&c) => {
-                get_val!(self; !is_ch_valid(&self.ch) => ident);
+                get_val!(self; is_ch_valid(&self.ch) => ident);
 
                 match keyword_get_tok(&ident) {
                     Some(v) => v,
                     None => Tok::Ident(ident),
                 }
             }
-            _ => {
-                crate::err!(unexpected self.ch, self.line => 1)
-            }
-        }
-    }
 
-    pub fn lex(&mut self) {
-        self.next();
-        let mut vec_tok = vec![];
-        while self.pos < self.raw.len() {
-            match self.get_tok() {
-                Tok::Space => (),
-                t => vec_tok.push(t),
+            // Nothing matches
+            c => {
+                crate::err!(unexpected c, self.line => 1)
             }
-            self.next();
         }
-        self.tokens = Box::new(vec_tok.into_iter())
     }
 }

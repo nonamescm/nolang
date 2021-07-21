@@ -11,7 +11,7 @@ macro_rules! get_val {
     ($self:expr; $cond:expr => $create:ident) => {
         let mut $create = String::new();
         loop {
-            if $cond {
+            if !$cond {
                 break;
             }
             $create.push($self.ch);

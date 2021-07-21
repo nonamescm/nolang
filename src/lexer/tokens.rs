@@ -15,13 +15,13 @@ pub enum Tokens {
     False,
     None, // Null value
     Let,  // declare function/variable
-    Defun,
     Case, // switch-case
     As,
     In,
     Return,
     Do,
-    End,
+    Done,
+    End, // `;;`
     For,
     While,
     Or,
@@ -43,16 +43,19 @@ pub enum Tokens {
     Lparen,
     Rbrace,
     Lbrace,
-    Assign, // `=`
-    Comp,   // `==`
-    Different, // `~=` or `!=` in other languages
-    Gt,     // `>`
-    Lt,     // `<`
-    Pipe,   // `|`
-    Comma,  // `,`
-    Point,  // `.`
-    Concat, // `..`
-    Underline, // `_` used as statement on patterns
+    Assign,      // `=`
+    ArrowAssign, // `=>`
+    Comp,        // `==`
+    Different,   // `~=` or `!=` in other languages
+    Gt,          // `>`
+    GtOrEq,      // `>=`
+    Lt,          // `<`
+    LtOrEq,      // `<=`
+    Pipe,        // `|`
+    Comma,       // `,`
+    Point,       // `.`
+    Concat,      // `..`
+    Underline,   // `_` used as statement on patterns
 }
 
 impl Tokens {
@@ -60,47 +63,38 @@ impl Tokens {
         matches!(
             *self,
             Self::Comp
-            |Self::Different
-            |Self::Gt
-            |Self::Lt
-            |Self::Plus
-            |Self::Minus
-            |Self::Slash
-            |Self::Asterisk
+                | Self::Different
+                | Self::Gt
+                | Self::Lt
+                | Self::Plus
+                | Self::Minus
+                | Self::Slash
+                | Self::Asterisk
         )
     }
 
     pub fn is_literal(&self) -> bool {
         matches!(
             *self,
-            Self::Number(_)
-            |Self::String(_)
-            |Self::True
-            |Self::False
-            |Self::None
+            Self::Number(_) | Self::String(_) | Self::True | Self::False | Self::None
         )
     }
 
     pub fn is_unary(&self) -> bool {
-        matches!(
-            *self,
-            Self::Not
-            |Self::Minus
-        )
+        matches!(*self, Self::Not | Self::Minus)
     }
 
     pub fn is_ident(&self) -> bool {
-        matches!(
-            *self,
-            Self::LocalIdent(_)
-            |Self::Ident(_)
-        )
+        matches!(*self, Self::LocalIdent(_) | Self::Ident(_))
+    }
+
+    pub fn is_comparison(&self) -> bool {
+        matches!(*self, Self::Comp | Self::Different | Self::Gt | Self::Lt)
     }
 }
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
     match k {
-        "defun" => Some(Tokens::Defun),
         "in" => Some(Tokens::In),
         "not" => Some(Tokens::Not),
         "return" => Some(Tokens::Return),
@@ -109,7 +103,7 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "for" => Some(Tokens::For),
         "while" => Some(Tokens::While),
         "do" => Some(Tokens::Do),
-        "end" => Some(Tokens::End),
+        "done" => Some(Tokens::Done),
         "true" => Some(Tokens::True),
         "false" => Some(Tokens::False),
         "none" => Some(Tokens::None),

@@ -1,0 +1,17 @@
+@ existing structures for now
+let a = 10;
+
+let fib => (:n)
+	if n <= 1 do
+		return fib(:n - 1);
+	done
+	return :n;
+;;
+
+for :i in 1, 2000 do
+	writeln("KK", :i);
+done
+
+while true do
+	writeln("OI");
+done

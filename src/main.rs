@@ -23,11 +23,10 @@ fn interpret() -> IOResult {
 
     for file in arguments {
         println!("{}", file);
-        let mut lexer = Lexer::new(read_to_string(file)?.chars().collect());
-        lexer.lex();
+        let tokens = Lexer::lex(read_to_string(file)?);
 
         println!("[");
-        for token in &mut lexer.tokens {
+        for token in tokens {
             println!("  {:?}", token)
         }
         println!("]");
@@ -50,11 +49,10 @@ fn repl() -> IOResult {
         let mut input = String::new();
         stdin().read_line(&mut input)?;
 
-        let mut lexer = Lexer::new(input.chars().collect());
-        lexer.lex();
+        let tokens = Lexer::lex(input);
 
         println!("[");
-        for token in &mut lexer.tokens {
+        for token in tokens {
             println!("  {:?}", token)
         }
         println!("]");
