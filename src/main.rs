@@ -1,5 +1,5 @@
 use nolang::colors::Colors;
-use nolang::lexer::{Lexer, parser::Parser};
+use nolang::parse::parse;
 use std::{
     env::{args, var},
     fs::read_to_string,
@@ -22,9 +22,7 @@ fn interpret() -> IOResult {
     arguments.next();
 
     for file in arguments {
-        let tokens = Parser::parse(
-            Lexer::lex(read_to_string(file)?)
-        );
+        let tokens = parse( read_to_string(file)? );
 
         println!("{:#?}", tokens.collect::<Vec<_>>())
     }
@@ -46,7 +44,7 @@ fn repl() -> IOResult {
         let mut input = String::new();
         stdin().read_line(&mut input)?;
 
-        let tokens = Parser::parse(Lexer::lex(input));
+        let tokens = parse(input);
 
         println!("{:#?}", tokens.collect::<Vec<_>>())
     }

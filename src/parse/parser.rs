@@ -1,4 +1,4 @@
-use crate::lexer::tokens::Tokens as Tok;
+use super::tokens::Tokens as Tok;
 use Tok::{
     Let,
     Ident,

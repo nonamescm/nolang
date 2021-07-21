@@ -1,7 +1,6 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum Tokens {
     // reserved fields
-    Space,
     Newline,
 
     // value fields
@@ -58,12 +57,11 @@ pub enum Tokens {
     Underline,   // `_` used as statement on patterns
 }
 
-fn s(string: &str) -> String {
-    string.to_owned()
-}
-
 impl std::fmt::Display for Tokens {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn s(string: &str) -> String {
+            string.to_owned()
+        }
         use Tokens::*;
         write!(f, "{}", match self.clone() {
             Gt => s(">"),
@@ -83,7 +81,6 @@ impl std::fmt::Display for Tokens {
             Pipe => s("|"),
             Comma => s(","),
             Underline => s("_"),
-            Space => s(" "),
             Newline => s("newline"),
             Point => s("."),
             Semicolon => s(";"),
@@ -126,6 +123,7 @@ impl std::fmt::Display for Tokens {
     }
 }
 
+#[allow(dead_code)]
 impl Tokens {
     pub fn is_operator(&self) -> bool {
         matches!(

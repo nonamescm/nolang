@@ -1,9 +1,7 @@
-pub mod tokens;
-pub mod parser;
 #[macro_use]
 mod util;
 
-use tokens::{keyword_get_tok, Tokens as Tok};
+use super::tokens::{keyword_get_tok, Tokens as Tok};
 use util::*;
 
 pub struct Lexer {

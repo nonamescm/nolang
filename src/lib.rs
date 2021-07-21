@@ -1,5 +1,5 @@
 pub mod colors;
-pub mod lexer;
+pub mod parse;
 
 #[macro_export]
 macro_rules! err {
