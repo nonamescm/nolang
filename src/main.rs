@@ -22,7 +22,7 @@ fn interpret() -> IOResult {
     arguments.next();
 
     for file in arguments {
-        let tokens = parse( read_to_string(file)? );
+        let tokens = parse(read_to_string(file)?);
 
         println!("{:#?}", tokens.collect::<Vec<_>>())
     }

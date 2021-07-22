@@ -1,10 +1,10 @@
-mod parser;
 mod lexer;
+mod parser;
 mod tokens;
 
-use parser::Parser;
 use lexer::Lexer;
+use parser::Parser;
 
-pub fn parse(input: String) -> impl Iterator<Item = Box<dyn parser::Op>> {
+pub fn parse(input: String) -> impl Iterator<Item = parser::Op> {
     Parser::parse(Lexer::lex(input))
 }

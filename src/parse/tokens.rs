@@ -2,6 +2,7 @@
 pub enum Tokens {
     // reserved fields
     Newline,
+    Eof,
 
     // value fields
     LocalIdent(String), // local identifier, like: $symbol = 20
@@ -59,67 +60,71 @@ pub enum Tokens {
 
 impl std::fmt::Display for Tokens {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fn s(string: &str) -> String {
-            string.to_owned()
-        }
+        let s = |string: &str| string.to_owned(); // helper syntax sugar method
+
         use Tokens::*;
-        write!(f, "{}", match self.clone() {
-            Gt => s(">"),
-            Lt => s("<"),
-            GtOrEq => s(">="),
-            LtOrEq => s("<="),
-            ArrowAssign => s("=>"),
-            Comp => s("=="),
-            Different => s("~="),
-            Assign => s("="),
+        write!(
+            f,
+            "{}",
+            match *self {
+                Eof => s("<EOF>"),
+                Gt => s(">"),
+                Lt => s("<"),
+                GtOrEq => s(">="),
+                LtOrEq => s("<="),
+                ArrowAssign => s("=>"),
+                Comp => s("=="),
+                Different => s("~="),
+                Assign => s("="),
 
-            Lparen => s("("),
-            Rparen => s(")"),
-            Lbrace => s("{"),
-            Rbrace => s("}"),
+                Lparen => s("("),
+                Rparen => s(")"),
+                Lbrace => s("{"),
+                Rbrace => s("}"),
 
-            Pipe => s("|"),
-            Comma => s(","),
-            Underline => s("_"),
-            Newline => s("newline"),
-            Point => s("."),
-            Semicolon => s(";"),
+                Pipe => s("|"),
+                Comma => s(","),
+                Underline => s("_"),
+                Newline => s("newline"),
+                Point => s("."),
+                Semicolon => s(";"),
 
-            Minus => s("-"),
-            Plus => s("+"),
-            Asterisk => s("*"),
-            Slash => s("/"),
-            Percent => s("%"),
-            Concat => s(".."),
+                Minus => s("-"),
+                Plus => s("+"),
+                Asterisk => s("*"),
+                Slash => s("/"),
+                Percent => s("%"),
+                Concat => s(".."),
 
-            LocalIdent(l) => format!(":{}", l),
-            Ident(l) => format!("{}", l),
-            Number(n) => n.to_string(),
-            Str(s) => s,
+                LocalIdent(ref l) => format!(":{}", l),
+                Ident(ref l) => l.clone(),
+                Number(n) => n.to_string(),
+                Str(ref s) => s.clone(),
 
-            True => s("true"),
-            False => s("false"),
-            None => s("none"),
+                True => s("true"),
+                False => s("false"),
+                None => s("none"),
 
-            Let => s("let"),
-            In => s("in"),
-            Return => s("return"),
-            Do => s("do"),
-            Done => s("done"),
-            End => s(";;"),
+                Let => s("let"),
+                In => s("in"),
+                Return => s("return"),
+                Do => s("do"),
+                Done => s("done"),
+                End => s(";;"),
 
-            For => s("for"),
-            While => s("while"),
-            If => s("if"),
-            Else => s("else"),
+                For => s("for"),
+                While => s("while"),
+                If => s("if"),
+                Else => s("else"),
 
-            Or => s("or"),
-            And => s("and"),
-            Not => s("not"),
+                Or => s("or"),
+                And => s("and"),
+                Not => s("not"),
 
-            Write => s("write"),
-            Writeln => s("writeln")
-        })
+                Write => s("write"),
+                Writeln => s("writeln"),
+            }
+        )
     }
 }
 
@@ -142,7 +147,13 @@ impl Tokens {
     pub fn is_literal(&self) -> bool {
         matches!(
             *self,
-            Self::Number(_) | Self::Str(_) | Self::True | Self::False | Self::None
+            Self::Number(..)
+                | Self::Str(..)
+                | Self::True
+                | Self::False
+                | Self::None
+                | Self::Ident(..)
+                | Self::LocalIdent(..)
         )
     }
 
