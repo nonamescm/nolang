@@ -71,23 +71,23 @@ impl Interpreter {
     /// Evaluate any Operation into an Primitive value
     fn evaluate(&self, operation: &Op) -> Primitive {
         match operation {
-            Op::Literal(ref value) => match **value {
+            Op::Primary(ref value) => match **value {
                 Literal::Bool(b) => Primitive::Bool(b),
                 Literal::None => Primitive::None,
                 Literal::String(ref s) => Primitive::String(s.clone()),
-                Literal::Op(ref op) => self.evaluate(op),
+                Literal::Operation(ref op) => self.evaluate(op),
                 Literal::Number(n) => Primitive::Number(n),
 
                 _ => todo!(),
             }
 
             Op::Unary(ref op, ref right) => match *op {
-                Tok::Minus => -self.evaluate(&Op::Literal(
+                Tok::Minus => -self.evaluate(&Op::Primary(
                     Box::new( (**right).clone() )
                 )),
 
                 Tok::Not => Primitive::Bool(!self.evaluate(
-                    &Op::Literal(Box::new(
+                    &Op::Primary(Box::new(
                         (**right).clone()
                     ))
                 )),

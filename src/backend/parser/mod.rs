@@ -1,7 +1,7 @@
 mod op;
 mod literal;
 
-pub use literal::{Var, Literal};
+pub use literal::Literal;
 pub use op::Op;
 use super::tokens::Tokens as Tok;
 
@@ -118,9 +118,9 @@ impl Parser {
             self.next();
         }
 
-        let ident = Op::Literal(Box::new(match &self.current {
-            Tok::Ident(id) => Literal::Var(Var::VarNormal(id.to_owned())),
-            Tok::LocalIdent(id) => Literal::Var(Var::VarLocal(id.to_owned())),
+        let ident = Op::Primary(Box::new(match &self.current {
+            Tok::Ident(id) => Literal::VarNormal(id.to_owned()),
+            Tok::LocalIdent(id) => Literal::VarLocal(id.to_owned()),
             _ => panic!(),
         }));
         self.next();
@@ -134,8 +134,8 @@ impl Parser {
         if matches!(self.current, Tok::Minus | Tok::Not) {
             let operator = self.current.clone();
             self.next();
-            let right = self.primary();
-            Op::Unary(operator, Box::new(Literal::Op(right)))
+            let right = self.unary();
+            Op::Unary(operator, Box::new(Literal::Operation(right)))
         } else {
             self.primary()
         }
@@ -148,15 +148,15 @@ impl Parser {
             Tok::None => Literal::None,
             Tok::Number(n) => Literal::Number(*n),
             Tok::Str(s) => Literal::String(s.to_owned()),
-            Tok::Ident(id) => Literal::Var(Var::VarNormal(id.to_owned())),
-            Tok::LocalIdent(id) => Literal::Var(Var::VarLocal(id.to_owned())),
+            Tok::Ident(id) => Literal::VarNormal(id.to_owned()),
+            Tok::LocalIdent(id) => Literal::VarLocal(id.to_owned()),
 
-            Tok::Lparen => Literal::Op(self.grouping()),
+            Tok::Lparen => Literal::Operation(self.grouping()),
 
             e => crate::err!(unexpected e, self.line => 1),
         };
         self.next();
-        Op::Literal(Box::new(literal))
+        Op::Primary(Box::new(literal))
     }
 
     /// Get binary Operations, `Literal Operator Literal`

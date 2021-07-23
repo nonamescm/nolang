@@ -3,7 +3,7 @@ mod parser;
 mod tokens;
 
 pub use {
-    parser::{Var, Op, Literal},
+    parser::{Op, Literal},
     tokens::Tokens
 };
 use lexer::Lexer;

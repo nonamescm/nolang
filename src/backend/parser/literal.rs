@@ -1,19 +1,13 @@
 use super::Op;
 
-/// Var struct
-#[derive(Debug, Clone)]
-pub enum Var {
-    VarNormal(String),
-    VarLocal(String),
-}
-
 #[derive(Debug, Clone)]
 pub enum Literal {
-    Var(Var),
+    VarNormal(String),
+    VarLocal(String),
     String(String),
     Bool(bool),
     Number(f64),
-    Op(Op),
+    Operation(Op),
     None
 }
 
