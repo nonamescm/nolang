@@ -105,7 +105,11 @@ impl Parser {
     fn next(&mut self) {
         self.index += 1;
         if (self.index as usize) < self.tokens.len() {
-            self.current = self.tokens[self.index as usize].clone();
+            if self.tokens[self.index as usize] == Tok::Newline {
+                self.next()
+            } else {
+                self.current = self.tokens[self.index as usize].clone()
+            }
         } else {
             self.current = Tok::Eof
         }
@@ -114,10 +118,6 @@ impl Parser {
     /// Check what's the current Op
     fn check_pattern(&mut self) -> Op {
         match self.current {
-            Tok::Newline => {
-                self.next();
-                self.check_pattern()
-            }
             Tok::Lparen => self.grouping(),
             Tok::Let => self.assign(),
             Tok::LocalIdent(..) if self.look_at_by(1) == &Tok::Assign => self.assign(),
@@ -191,6 +191,7 @@ impl Parser {
         Op::Literal(literal)
     }
 
+    /// Get binary Operations, `Literal Operator Literal`
     fn binary(&mut self) -> Op {
         let right = self.unary();
 
