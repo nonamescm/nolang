@@ -1,5 +1,6 @@
 use nolang::colors::Colors;
 use nolang::backend::parse;
+use nolang::interpreter::Interpreter;
 use std::{
     env::{args, var},
     fs::read_to_string,
@@ -44,8 +45,8 @@ fn repl() -> IOResult {
         let mut input = String::new();
         stdin().read_line(&mut input)?;
 
-        let tokens = parse(input);
+        /* let tokens = */Interpreter::interpret(parse(input));
 
-        println!("{:#?}", tokens.collect::<Vec<_>>())
+        // println!("{:#?}", tokens.collect::<Vec<_>>())
     }
 }

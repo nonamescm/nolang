@@ -37,32 +37,32 @@ macro_rules! consume {
     }}
 }
 
-/// Literal values on nolang, like strings, numbers, booleans and null implement it
-pub trait Literal: std::fmt::Debug {}
-
-/// Macro to help implementing Literal trait, so you don't need to type
-/// `impl Literal for ... {}` for all types
-macro_rules! register_literals {
-    ( $($type: ty);+ ;) => {
-        $(impl Literal for $type {})+
-    }
+#[derive(Debug)]
+pub enum Literal {
+    Var(Var),
+    String(String),
+    Bool(bool),
+    Number(f64),
+    Op(Op),
+    None
 }
 
-register_literals! {
-    Var;
-    String;
-    bool;
-    f64;
-    ();
-    Op;
+impl Literal {
+    pub fn boolean(&self) -> bool {
+        match *self {
+            Self::Bool(false) => false,
+            Self::None => false,
+            Self::Number(x) if x == 0.0 => false,
+            _ => true
+        }
+    }
 }
 
 /// Operations Enum, you can think of it as `Expr` in most parsers
 #[derive(Debug)]
 pub enum Op {
-    Literal(Box<dyn Literal>),
-    Assign(Var, Box<dyn Literal>),
-    Unary(Tok, Box<dyn Literal>),
+    Literal(Box<Literal>),
+    Unary(Tok, Box<Literal>),
     Binary(Box<Op>, Tok, Box<Op>),
     Grouping(Box<Op>),
 }
@@ -151,8 +151,8 @@ impl Parser {
         }
 
         let ident = Op::Literal(Box::new(match &self.current {
-            Tok::Ident(id) => Var::VarNormal(id.to_owned()),
-            Tok::LocalIdent(id) => Var::VarLocal(id.to_owned()),
+            Tok::Ident(id) => Literal::Var(Var::VarNormal(id.to_owned())),
+            Tok::LocalIdent(id) => Literal::Var(Var::VarLocal(id.to_owned())),
             _ => panic!(),
         }));
         self.next();
@@ -167,28 +167,28 @@ impl Parser {
             let operator = self.current.clone();
             self.next();
             let right = self.primary();
-            Op::Unary(operator, Box::new(right))
+            Op::Unary(operator, Box::new(Literal::Op(right)))
         } else {
             self.primary()
         }
     }
 
     fn primary(&mut self) -> Op {
-        let literal: Box<dyn Literal> = match &self.current {
-            Tok::True => Box::new(true),
-            Tok::False => Box::new(false),
-            Tok::None => Box::new(()),
-            Tok::Number(n) => Box::new(*n),
-            Tok::Str(s) => Box::new(s.to_owned()),
-            Tok::Ident(id) => Box::new(Var::VarNormal(id.to_owned())),
-            Tok::LocalIdent(id) => Box::new(Var::VarLocal(id.to_owned())),
+        let literal: Literal = match &self.current {
+            Tok::True => Literal::Bool(true),
+            Tok::False => Literal::Bool(false),
+            Tok::None => Literal::None,
+            Tok::Number(n) => Literal::Number(*n),
+            Tok::Str(s) => Literal::String(s.to_owned()),
+            Tok::Ident(id) => Literal::Var(Var::VarNormal(id.to_owned())),
+            Tok::LocalIdent(id) => Literal::Var(Var::VarLocal(id.to_owned())),
 
-            Tok::Lparen => Box::new(self.grouping()),
+            Tok::Lparen => Literal::Op(self.grouping()),
 
             e => crate::err!(unexpected e, self.line => 1),
         };
         self.next();
-        Op::Literal(literal)
+        Op::Literal(Box::new(literal))
     }
 
     /// Get binary Operations, `Literal Operator Literal`
