@@ -1,12 +1,46 @@
-#![allow(dead_code, unused_imports, unused_variables)]
 use crate::backend::{Literal, Op, Tokens as Tok};
+use std::ops;
 
 #[derive(Debug)]
-enum Primitive<'a> {
+enum Primitive {
     Number(f64),
-    String(&'a String),
+    String(String),
     Bool(bool),
     None
+}
+
+impl ops::Not for Primitive {
+    type Output = bool;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Self::Bool(false) => true,
+            Self::None => true,
+            Self::Number(x) if x == 0.0 => true,
+            _ => false
+        }
+    }
+}
+
+impl ops::Neg for Primitive {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Self::Number(n) => Primitive::Number(-n),
+            Self::Bool(true) => Primitive::Number(-1f64),
+            Self::Bool(false) => Primitive::Number(0f64),
+            Self::String(s) => Primitive::Number(s.len() as f64),
+            Self::None => Primitive::Number(0f64)
+        }
+    }
+}
+
+impl Primitive {
+    #[allow(dead_code)]
+    pub fn boolean(self) -> bool {
+        !!self
+    }
 }
 
 #[allow(dead_code)]
@@ -37,13 +71,26 @@ impl Interpreter {
     /// Evaluate any Operation into an Primitive value
     fn evaluate(&self, operation: &Op) -> Primitive {
         match operation {
-            Op::Unary(ref op, ref right) => match *op {
-                Tok::Minus => match **right {
-                    Literal::Number(n) => Primitive::Number(-n),
-                    _ => todo!()
-                }
+            Op::Literal(ref value) => match **value {
+                Literal::Bool(b) => Primitive::Bool(b),
+                Literal::None => Primitive::None,
+                Literal::String(ref s) => Primitive::String(s.clone()),
+                Literal::Op(ref op) => self.evaluate(op),
+                Literal::Number(n) => Primitive::Number(n),
 
-                Tok::Not => Primitive::Bool(!right.boolean()),
+                _ => todo!(),
+            }
+
+            Op::Unary(ref op, ref right) => match *op {
+                Tok::Minus => -self.evaluate(&Op::Literal(
+                    Box::new( (**right).clone() )
+                )),
+
+                Tok::Not => Primitive::Bool(!self.evaluate(
+                    &Op::Literal(Box::new(
+                        (**right).clone()
+                    ))
+                )),
                 _ => panic!() // Unreachable
             }
 

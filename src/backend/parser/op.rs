@@ -2,7 +2,7 @@ use super::literal::Literal;
 use super::super::tokens::Tokens as Tok;
 
 /// Operations Enum, you can think of it as `Expr` in most parsers
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Op {
     Literal(Box<Literal>),
     Unary(Tok, Box<Literal>),
