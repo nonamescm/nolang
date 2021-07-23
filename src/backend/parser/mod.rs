@@ -1,11 +1,9 @@
-use super::tokens::Tokens as Tok;
+mod op;
+mod literal;
 
-/// Var struct
-#[derive(Debug)]
-pub enum Var {
-    VarNormal(String),
-    VarLocal(String),
-}
+pub use literal::{Var, Literal};
+pub use op::Op;
+use super::tokens::Tokens as Tok;
 
 /// Check if a token matches and panic if it doesn't, returns ()
 macro_rules! consume {
@@ -35,36 +33,6 @@ macro_rules! consume {
         }
         $self.next();
     }}
-}
-
-#[derive(Debug)]
-pub enum Literal {
-    Var(Var),
-    String(String),
-    Bool(bool),
-    Number(f64),
-    Op(Op),
-    None
-}
-
-impl Literal {
-    pub fn boolean(&self) -> bool {
-        match *self {
-            Self::Bool(false) => false,
-            Self::None => false,
-            Self::Number(x) if x == 0.0 => false,
-            _ => true
-        }
-    }
-}
-
-/// Operations Enum, you can think of it as `Expr` in most parsers
-#[derive(Debug)]
-pub enum Op {
-    Literal(Box<Literal>),
-    Unary(Tok, Box<Literal>),
-    Binary(Box<Op>, Tok, Box<Op>),
-    Grouping(Box<Op>),
 }
 
 /// Parser struct, has the fields that are used in Parser::parse
