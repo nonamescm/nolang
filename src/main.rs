@@ -1,5 +1,5 @@
 use nolang::colors::Colors;
-use nolang::parse::parse;
+use nolang::backend::parse;
 use std::{
     env::{args, var},
     fs::read_to_string,
