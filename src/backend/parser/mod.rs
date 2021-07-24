@@ -63,12 +63,6 @@ impl Parser {
         op_vec.into_iter()
     }
 
-    /// Look at current tokens advancing by the given number
-    fn look_at_by(&self, n: isize) -> &Tok {
-        let n = (self.index + n) as usize;
-        self.tokens.get(n).unwrap_or(&Tok::Eof)
-    }
-
     /// Consume one token, advancing the self.current by one position
     fn next(&mut self) {
         self.index += 1;
@@ -85,51 +79,33 @@ impl Parser {
 
     /// Check what's the current Op
     fn check_pattern(&mut self) -> Op {
-        match self.current {
-            Tok::Lparen => self.grouping(),
-            Tok::Let => self.assign(),
-            Tok::LocalIdent(..) if self.look_at_by(1) == &Tok::Assign => self.assign(),
-
-            _ if self.look_at_by(1).is_operator() => self.binary(),
-
-            ref t if t.is_unary() | t.is_literal() => self.binary(),
-            ref e => crate::err!(custom format!("{:?}: Not yet implemented", e) => 1),
-        }
+        self.equality()
     }
 
-    /// Get grouping Op: `(Op)`
-    fn grouping(&mut self) -> Op {
-        self.next();
-        let item = Op::Grouping(Box::new(self.check_pattern()));
-
-        consume!(self, self.current, Tok::Rparen);
-
-        if self.current.is_operator() {
-            let operator = self.current.clone();
-            self.next();
-            Op::Binary(Box::new(item), operator, Box::new(self.check_pattern()))
-        } else {
-            item
-        }
-    }
-
-    fn assign(&mut self) -> Op {
-        if self.current == Tok::Let {
-            self.next();
-        }
-
-        let ident = Op::Primary(Box::new(match &self.current {
+    /// Get raw operations
+    fn primary(&mut self) -> Op {
+        let literal: Literal = match &self.current {
+            Tok::True => Literal::Bool(true),
+            Tok::False => Literal::Bool(false),
+            Tok::None => Literal::None,
+            Tok::Number(n) => Literal::Number(*n),
+            Tok::Str(s) => Literal::String(s.to_owned()),
             Tok::Ident(id) => Literal::VarNormal(id.to_owned()),
             Tok::LocalIdent(id) => Literal::VarLocal(id.to_owned()),
-            _ => panic!(),
-        }));
+            Tok::Lparen => {
+                self.next();
+                let operation = self.check_pattern();
+                consume!(self, self.current, Tok::Rparen);
+                return Op::Grouping(Box::new(operation))
+            }
+
+            e => crate::err!(unexpected e, self.line => 1),
+        };
         self.next();
-
-        consume!(self, self.current, Tok::Assign);
-
-        Op::Binary(Box::new(ident), Tok::Assign, Box::new(self.check_pattern()))
+        Op::Primary(Box::new(literal))
     }
 
+    /// Get unary operations, such as `not<OP>` and `-<OP>`
     fn unary(&mut self) -> Op {
         if matches!(self.current, Tok::Minus | Tok::Not) {
             let operator = self.current.clone();
@@ -141,36 +117,58 @@ impl Parser {
         }
     }
 
-    fn primary(&mut self) -> Op {
-        let literal: Literal = match &self.current {
-            Tok::True => Literal::Bool(true),
-            Tok::False => Literal::Bool(false),
-            Tok::None => Literal::None,
-            Tok::Number(n) => Literal::Number(*n),
-            Tok::Str(s) => Literal::String(s.to_owned()),
-            Tok::Ident(id) => Literal::VarNormal(id.to_owned()),
-            Tok::LocalIdent(id) => Literal::VarLocal(id.to_owned()),
+    /// Get multiply and division operations
+    fn factor(&mut self) -> Op {
+        let mut left = self.unary();
 
-            Tok::Lparen => Literal::Operation(self.grouping()),
-
-            e => crate::err!(unexpected e, self.line => 1),
-        };
-        self.next();
-        Op::Primary(Box::new(literal))
-    }
-
-    /// Get binary Operations, `Literal Operator Literal`
-    fn binary(&mut self) -> Op {
-        let right = self.unary();
-
-        if self.current.is_operator() {
+        while matches!(self.current, Tok::Asterisk | Tok::Slash) {
             let operator = self.current.clone();
             self.next();
-            let left = self.check_pattern();
+            let right = self.unary();
 
-            Op::Binary(Box::new(right), operator, Box::new(left))
-        } else {
-            right
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
         }
+        left
+    }
+
+    /// Get add and sub operations
+    fn term(&mut self) -> Op {
+        let mut left = self.factor();
+
+        while matches!(self.current, Tok::Plus | Tok::Minus) {
+            let operator = self.current.clone();
+            self.next();
+            let right = self.factor();
+
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
+        }
+
+        left
+    }
+
+    fn comparison(&mut self) -> Op {
+        let mut left = self.term();
+
+        while matches!(self.current, Tok::Gt | Tok::GtOrEq | Tok::Lt | Tok::LtOrEq) {
+            let operator = self.current.clone();
+            self.next();
+            let right = self.term();
+
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
+        }
+        left
+    }
+
+    fn equality(&mut self) -> Op {
+        let mut left = self.comparison();
+
+        while matches!(self.current, Tok::Comp | Tok::Different) {
+            let operator = self.current.clone();
+            self.next();
+            let right = self.term();
+
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
+        }
+        left
     }
 }

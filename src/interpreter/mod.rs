@@ -1,49 +1,7 @@
+mod primitive;
+use primitive::Primitive;
 use crate::backend::{Literal, Op, Tokens as Tok};
-use std::ops;
 
-#[derive(Debug)]
-enum Primitive {
-    Number(f64),
-    String(String),
-    Bool(bool),
-    None
-}
-
-impl ops::Not for Primitive {
-    type Output = bool;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Self::Bool(false) => true,
-            Self::None => true,
-            Self::Number(x) if x == 0.0 => true,
-            _ => false
-        }
-    }
-}
-
-impl ops::Neg for Primitive {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        match self {
-            Self::Number(n) => Primitive::Number(-n),
-            Self::Bool(true) => Primitive::Number(-1f64),
-            Self::Bool(false) => Primitive::Number(0f64),
-            Self::String(s) => Primitive::Number(s.len() as f64),
-            Self::None => Primitive::Number(0f64)
-        }
-    }
-}
-
-impl Primitive {
-    #[allow(dead_code)]
-    pub fn boolean(self) -> bool {
-        !!self
-    }
-}
-
-#[allow(dead_code)]
 pub struct Interpreter {
     operations: Vec<Op>,
     index: usize
@@ -57,7 +15,7 @@ impl Interpreter {
         };
 
         loop {
-            println!("{:#?}", eself.evaluate(&eself.operations[eself.index]));
+            println!("{:?}", &eself.evaluate(eself.operations[eself.index].clone()));
             if !eself.next(){ break }
         }
     }
@@ -68,41 +26,54 @@ impl Interpreter {
         self.index < self.operations.len()
     }
 
-    /// Evaluate any Operation into an Primitive value
-    fn evaluate(&self, operation: &Op) -> Primitive {
+    /// Eval primary expressions, that are just the minimal possible expression
+    fn eval_primary(&mut self, prim: Literal) -> Primitive {
+        match prim {
+            Literal::Bool(b) => Primitive::Bool(b),
+            Literal::None => Primitive::None,
+            Literal::String(ref s) => Primitive::Str(s.clone()),
+            Literal::Operation(ref op) => self.evaluate(op.clone()),
+            Literal::Number(n) => Primitive::Number(n),
+            _ => todo!() // I still not implemented variables
+        }
+    }
+
+    /// Unary expression evaluator
+    fn eval_unary(&mut self, op: &Tok, right: Literal) -> Primitive {
+        match op {
+            Tok::Minus => -self.evaluate(Op::Primary(Box::new(right))),
+            Tok::Not => Primitive::Bool(!self.evaluate(Op::Primary(Box::new(right)))),
+            _ => unreachable!()
+        }
+    }
+
+    /// binary expression evaluator, like `1+1` or `1*1`
+    fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
+        match op {
+            // operations
+            Tok::Plus => self.evaluate(right) + self.evaluate(left),
+            Tok::Minus => self.evaluate(right) - self.evaluate(left),
+            Tok::Asterisk => self.evaluate(right) * self.evaluate(left),
+            Tok::Slash => self.evaluate(right) / self.evaluate(left),
+
+            // Comparisons
+            Tok::Comp => Primitive::Bool(self.evaluate(right) == self.evaluate(left)),
+            Tok::Different => Primitive::Bool(self.evaluate(right) != self.evaluate(left)),
+            Tok::Gt => Primitive::Bool(self.evaluate(right) > self.evaluate(left)),
+            Tok::GtOrEq => Primitive::Bool(self.evaluate(right) >= self.evaluate(left)),
+            Tok::Lt => Primitive::Bool(self.evaluate(right) < self.evaluate(left)),
+            Tok::LtOrEq => Primitive::Bool(self.evaluate(right) <= self.evaluate(left)),
+            _ => unreachable!()
+        }
+    }
+
+    /// Minimal wrapper that sends the Op to the correct evaluator
+    fn evaluate(&mut self, operation: Op) -> Primitive {
         match operation {
-            Op::Primary(ref value) => match **value {
-                Literal::Bool(b) => Primitive::Bool(b),
-                Literal::None => Primitive::None,
-                Literal::String(ref s) => Primitive::String(s.clone()),
-                Literal::Operation(ref op) => self.evaluate(op),
-                Literal::Number(n) => Primitive::Number(n),
-
-                _ => todo!(),
-            }
-
-            Op::Unary(ref op, ref right) => match *op {
-                Tok::Minus => -self.evaluate(&Op::Primary(
-                    Box::new( (**right).clone() )
-                )),
-
-                Tok::Not => Primitive::Bool(!self.evaluate(
-                    &Op::Primary(Box::new(
-                        (**right).clone()
-                    ))
-                )),
-                _ => panic!() // Unreachable
-            }
-
-            /* Needs custom implementation, but I'll commit what I've already done before
-            Op::Binary(ref left, ref op, ref right) => match *op {
-                Tok::Minus => match (**right, **left) {
-                    (Op::Literal(n1), Op::Literal(n2)) => Primitive::Number(*n1 - *n2),
-                    _ => panic!()
-                }
-            }
-            */
-            _ => todo!()
+            Op::Primary(ref value) => self.eval_primary((**value).clone()),
+            Op::Unary(ref op, ref right) => self.eval_unary(op, (**right).clone()),
+            Op::Binary(ref left, ref op, ref right) => self.eval_binary((**left).clone(), op, (**right).clone()),
+            Op::Grouping(ref op) => self.evaluate(*op.clone())
         }
     }
 }
