@@ -9,31 +9,17 @@ use super::tokens::Tokens as Tok;
 
 /// Check if a token matches and panic if it doesn't, returns ()
 macro_rules! consume {
-    ($current: expr, $( $tokens:pat )|+) => {
+    ($current: expr, $( $tokens:pat )|+) => {{
+        let printable = format!("{:?}", [ $(stringify!($tokens)),+ ]).replace("\"", "")
+            .replace("[", "")
+            .replace("]", "");
         if !matches!($current, $($tokens)|+) {
-            crate::err!(
-                custom
-                format!(
-                    "ParseError: expected one of: {:?} found {:?}",
-                    [ $(stringify!($tokens)),+ ],
-                    $current,
-                ).replace("\"", "").replace("[", "").replace("]", "") => 1
-            )
+            crate::error!("ParseError"; "expected one of: {} found {:?}", printable, $current => 1)
         } else { true }
-    };
+    }};
 
     ($self: ident, $current: expr, $($tokens:pat)|+) => {{
-        if !matches!($current, $($tokens)|+) {
-            crate::err!(
-                custom
-                format!(
-                    "ParseError: expected one of: {:?} found {:?} on line {}",
-                    [ $(stringify!($tokens)),+ ],
-                    $current,
-                    $self.line
-                ).replace("\"", "").replace("[", "").replace("]", "") => 1
-            )
-        }
+        consume!($current, $($tokens)|+);
         $self.next();
     }}
 }
@@ -140,7 +126,7 @@ impl Parser {
                 return Op::Grouping(Box::new(operation))
             }
 
-            e => crate::err!(unexpected e, self.line => 1),
+            e => crate::error!("ParseError"; "Unexpected `{}` on line {}", e, self.line => 1),
         };
         self.next();
         Op::Primary(Box::new(literal))

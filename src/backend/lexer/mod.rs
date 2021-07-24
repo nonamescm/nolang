@@ -138,10 +138,10 @@ impl Lexer {
 
                 match keyword_get_tok(&ident) {
                     Some(ident) => {
-                        crate::err!(custom format!("keyword `{:?}` used as name on line {:?}", ident, self.line) => 1)
+                        crate::error!("ParseError"; "keyword `{}` used as name on line {}", ident, self.line => 1)
                     }
                     None if !ident.is_empty() => Tok::LocalIdent(ident),
-                    None => crate::err!(unexpected self.ch, self.line => 1),
+                    None => crate::error!("ParseError"; "Unexpected `:` on line {}", self.line => 1),
                 }
             }
             '\'' | '"' => {
@@ -154,13 +154,9 @@ impl Lexer {
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; is_valid_math_symbol(&self.ch) => num);
 
-                if is_ch_valid(&self.current()) {
-                    crate::err!(unexpected self.current(), self.line => 1)
-                }
-
                 let val = num
                     .parse::<f64>()
-                    .unwrap_or_else(|_| crate::err!(custom format!("error parsing number at line {}", self.line) => 1));
+                    .unwrap_or_else(|_| crate::error!("ParseError"; "error parsing number at line {}", self.line => 1));
                 Tok::Number(val)
             }
             c if is_ch_valid(&c) => {
@@ -174,7 +170,7 @@ impl Lexer {
 
             // Nothing matches
             c => {
-                crate::err!(unexpected c, self.line => 1)
+                crate::error!("ParseError"; "Unexpected token {} on line {}", c, self.line => 1)
             }
         }
     }

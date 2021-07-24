@@ -44,6 +44,9 @@ impl Interpreter {
             }
             Statement::Assign(var, value) => {
                 let value = self.statement(*value);
+                if self.variables.get(&var).is_some() {
+                    crate::error!("TypeError"; "tried to reassign global constant {}", var.to_string() => 1)
+                }
                 self.variables.insert(var, value);
                 Primitive::None
             }
@@ -63,7 +66,7 @@ impl Interpreter {
             Literal::VarNormal(v) => {
                 (
                     *self.variables.get(&v).unwrap_or_else(|| {
-                        error!("│ RuntimeError:\n│ acessing undefined variable {}", v => 1)
+                        crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1)
                     })
                 ).clone()
             }

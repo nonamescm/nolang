@@ -1,17 +1,10 @@
+use crate::error;
 use std::{
     fmt,
     ops,
     cmp,
     hash::{Hash, Hasher}
 };
-
-#[macro_export]
-macro_rules! error {
-    ($($format_args:expr),+ => $exit_value: expr) => {{
-        eprintln!($($format_args),+);
-        std::process::exit($exit_value)
-    }}
-}
 
 #[derive(Debug, Clone)]
 /// Nolang primitive types
@@ -30,7 +23,7 @@ impl PartialEq for Primitive {
             (Self::Number(s_num), Self::Number(o_num)) => s_num == o_num,
             (Self::Bool(s_bool), Self::Bool(o_bool)) => s_bool == o_bool,
             (Self::None, Self::None) => true,
-            _ => error!("│ TypeError:\n│ can't compare {} with {} using == or ~=", self, other => 1)
+            _ => error!("TypeError"; "can't compare {} with {} using == or ~=", self, other => 1)
         }
     }
 }
@@ -88,7 +81,7 @@ impl ops::Add for Primitive {
     fn add(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
             (Some(o_num), Some(s_num)) => Self::Number(o_num + s_num),
-            _ => error!("│ TypeError:\n│ tried to use `+` operator between {} and {}", rhs, self => 1)
+            _ => error!("TypeError"; "tried to use `+` operator between {} and {}", rhs, self => 1)
         }
     }
 }
@@ -99,7 +92,7 @@ impl ops::Sub for Primitive {
     fn sub(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
             (Some(o_num), Some(s_num)) => Self::Number(o_num - s_num),
-            _ => error!("│ TypeError:\n│ tried to use `-` operator between {} and {}", rhs, self => 1)
+            _ => error!("TypeError"; "tried to use `-` operator between {} and {}", rhs, self => 1)
         }
     }
 }
@@ -110,7 +103,7 @@ impl ops::Mul for Primitive {
     fn mul(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
             (Some(o_num), Some(s_num)) => Self::Number(o_num * s_num),
-            _ => error!("│ TypeError:\n│ tried to use `*` operator between {} and {}", rhs, self => 1)
+            _ => error!("TypeError"; "tried to use `*` operator between {} and {}", rhs, self => 1)
         }
     }
 }
@@ -121,7 +114,7 @@ impl ops::Div for Primitive {
     fn div(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
             (Some(o_num), Some(s_num)) => Self::Number(o_num / s_num),
-            _ => error!("│ TypeError:\n│ tried to use `/` operator between {} and {}", rhs, self => 1)
+            _ => error!("TypeError"; "tried to use `/` operator between {} and {}", rhs, self => 1)
         }
     }
 }
@@ -133,7 +126,7 @@ impl cmp::PartialOrd for Primitive {
             (Self::Number(s_num), Self::Number(o_num)) => o_num.partial_cmp(s_num),
             (Self::Str(s_str), Self::Str(o_str)) => o_str.partial_cmp(s_str),
             (Self::Bool(s_bool), Self::Bool(o_bool)) => o_bool.partial_cmp(s_bool),
-            _ => error!("│ TypeError:\n│ can't compare {} with {} using <, >, <=, >=", self, other => 1)
+            _ => error!("TypeError"; "can't compare {} with {} using <, >, <=, >=", self, other => 1)
         }
     }
 }

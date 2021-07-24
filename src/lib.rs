@@ -1,24 +1,26 @@
 pub mod colors;
 pub mod backend;
 pub mod interpreter;
+use colors::Colors;
 
 #[macro_export]
-macro_rules! err {
-    // unexpected
-    (unexpected $ch:expr, $line:expr => $val:expr) => {{
-        eprintln!("unexpected token `{}` at line {}", $ch, $line);
-        std::process::exit($val)
-    }};
-
-    // unclosed delimiter
-    (unclosed $line:expr => $val:expr) => {{
-        eprintln!("unclosed delimiter opened at line {}", $line);
-        std::process::exit($val)
-    }};
-
-    // custom
-    (custom $arg:expr => $val:expr) => {{
-        eprintln!("{}", $arg);
-        std::process::exit($val)
-    }};
+macro_rules! error {
+    ($error_type:expr; $($format_args:expr),+ => $exit_value: expr) => {{
+        eprintln!(
+            "\x1b[1m{}\x1b[0m",
+            $crate::Colors::colorize(
+                $crate::Colors::Red,
+                &format!("├ {}:", $error_type)
+            )
+        );
+        eprint!(
+            "\x1b[1m{}\x1b[0m",
+            $crate::Colors::colorize(
+                $crate::Colors::Red,
+                "└─ "
+            )
+        );
+        eprintln!($($format_args),+);
+        std::process::exit($exit_value)
+    }}
 }
