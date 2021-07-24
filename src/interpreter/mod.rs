@@ -47,7 +47,7 @@ impl Interpreter {
                 self.variables.insert(var, value);
                 Primitive::None
             }
-            #[allow(unreachable_patterns)]
+            #[allow(unreachable_patterns)] // for when I implement new statements and want to them on the parser
             _ => unimplemented!()
         }
     }

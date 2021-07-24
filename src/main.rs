@@ -13,11 +13,12 @@ use std::{
 type IOResult<T> = Result<T, std::io::Error>;
 
 fn main() -> IOResult<()> {
-    let files = args().filter(|x| !x.starts_with('-')).collect::<Vec<String>>();
-    let flairs = args().filter(|x| x.starts_with('-')).collect::<Vec<String>>();
+    let flairs = std::env::args().collect::<Vec<_>>();
+    let flairs: Vec<&str> = flairs.iter().map(|x| &**x).collect();
 
-    if files.len() < 2 {
-        repl(flairs)?;
+
+    if args().filter(|x| !x.starts_with('-')).count() < 2 {
+        repl(flairs.as_slice())?;
     } else {
         interpret()?;
     }
@@ -29,44 +30,42 @@ fn interpret() -> IOResult<()> {
     arguments.next();
 
     for file in arguments {
-        let tokens = parse(read_to_string(file)?);
-
-        println!("{:#?}", tokens.collect::<Vec<_>>())
+        Interpreter::interpret(parse(read_to_string(file)?));
     }
     Ok(())
 }
 
-fn repl(arguments: Vec<String>) -> IOResult<()> {
+fn print_read() -> IOResult<String> {
     use Colors::*;
-    let print_read = || -> IOResult<String> {
-        print!(
-            "{}({}){} ",
-            Colors::colorize(Purple, &var("USER").unwrap_or_else(|_| "REPL".to_string())),
-            Colors::colorize(LightBlue, "NoLang"),
-            Colors::colorize(Green, ">")
-        );
 
-        stdout().flush()?;
+    print!(
+        "{}({}){} ",
+        Colors::colorize(Purple, &var("USER").unwrap_or_else(|_| "REPL".to_string())),
+        Colors::colorize(LightBlue, "NoLang"),
+        Colors::colorize(Green, ">")
+    );
 
-        let mut input = String::new();
-        stdin().read_line(&mut input)?;
-        Ok(input)
-    };
+    stdout().flush()?;
 
-    if arguments.contains(&"-p".to_string()) {
-        loop {
+    let mut input = String::new();
+    stdin().read_line(&mut input)?;
+    Ok(input)
+}
+
+fn repl(arguments: &[&str]) -> IOResult<()> {
+    match arguments.get(1) {
+        Some(&"-p") => loop {
             let input = print_read()?;
             println!("{:#?}", parse(input).collect::<Vec<_>>());
         }
-    } else if arguments.contains(&"-l".to_string()) {
-        loop {
+        Some(&"-l") => loop {
             let input = print_read()?;
             println!("{:#?}", lex(input).collect::<Vec<_>>())
         }
-    } else {
-        loop {
+        Some(e) => panic!("Unrecognized option `{}`", e),
+        None => loop {
             let input = print_read()?;
-            Interpreter::interpret(parse(input))
+            Interpreter::interpret(parse(input.to_string()));
         }
     }
 }
