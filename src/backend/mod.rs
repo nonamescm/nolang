@@ -3,13 +3,13 @@ mod parser;
 mod tokens;
 
 pub use {
-    parser::{Op, Literal},
+    parser::{Op, Literal, Statement},
     tokens::Tokens
 };
 use lexer::Lexer;
 use parser::Parser;
 
-pub fn parse(input: String) -> impl Iterator<Item = Op> {
+pub fn parse(input: String) -> impl Iterator<Item = Statement> {
     Parser::parse(Lexer::lex(input))
 }
 

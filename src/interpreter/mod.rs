@@ -1,29 +1,55 @@
+#[macro_use]
 mod primitive;
 use primitive::Primitive;
-use crate::backend::{Literal, Op, Tokens as Tok};
+use std::collections::HashMap;
+
+use crate::backend::{Literal, Statement, Op, Tokens as Tok};
 
 pub struct Interpreter {
-    operations: Vec<Op>,
-    index: usize
+    statements: Vec<Statement>,
+    index: usize,
+    variables: HashMap<String, Primitive>
 }
 
 impl Interpreter {
-    pub fn interpret(operations: impl Iterator<Item = Op>) {
+    pub fn interpret(operations: impl Iterator<Item = Statement>) {
         let mut eself = Self {
-            operations: operations.collect(),
-            index: 0
+            statements: operations.collect(),
+            index: 0,
+            variables: HashMap::new()
         };
 
         loop {
-            eself.evaluate(eself.operations[eself.index].clone());
+            eself.statement(eself.statements[eself.index].clone());
             if !eself.next(){ break }
         }
     }
 
     fn next(&mut self) -> bool {
-        self.index+=1;
+        self.index += 1;
 
-        self.index < self.operations.len()
+        self.index < self.statements.len()
+    }
+
+    fn statement(&mut self, statement: Statement) -> Primitive {
+        match statement {
+            Statement::Op(op) => self.evaluate(op),
+            Statement::Write(value) => {
+                print!("{}", self.statement(*value));
+                Primitive::None
+            }
+            Statement::Writeln(value) => {
+                println!("{}", self.statement(*value));
+                Primitive::None
+            }
+            Statement::Assign(var, value) => {
+                let value = self.statement(*value);
+                self.variables.insert(var, value);
+                Primitive::None
+            }
+            #[allow(unreachable_patterns)]
+            _ => unimplemented!()
+        }
     }
 
     /// Eval primary expressions, that are just the minimal possible expression
@@ -34,6 +60,13 @@ impl Interpreter {
             Literal::String(ref s) => Primitive::Str(s.clone()),
             Literal::Operation(ref op) => self.evaluate(op.clone()),
             Literal::Number(n) => Primitive::Number(n),
+            Literal::VarNormal(v) => {
+                (
+                    *self.variables.get(&v).unwrap_or_else(|| {
+                        error!("│ RuntimeError:\n│ acessing undefined variable {}", v => 1)
+                    })
+                ).clone()
+            }
             _ => todo!() // I still not implemented variables
         }
     }

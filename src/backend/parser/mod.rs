@@ -1,7 +1,9 @@
 mod op;
 mod literal;
+mod statement;
 
 pub use literal::Literal;
+pub use statement::Statement;
 pub use op::Op;
 use super::tokens::Tokens as Tok;
 
@@ -12,12 +14,12 @@ macro_rules! consume {
             crate::err!(
                 custom
                 format!(
-                    "expected one of {:?} found {:?}",
+                    "ParseError: expected one of: {:?} found {:?}",
                     [ $(stringify!($tokens)),+ ],
-                    $current
-                ) => 1
+                    $current,
+                ).replace("\"", "").replace("[", "").replace("]", "") => 1
             )
-        }
+        } else { true }
     };
 
     ($self: ident, $current: expr, $($tokens:pat)|+) => {{
@@ -46,7 +48,7 @@ pub struct Parser {
 
 impl Parser {
     /// Simple implementation of a parser
-    pub fn parse(tokens: impl Iterator<Item = Tok>) -> impl Iterator<Item = Op> {
+    pub fn parse(tokens: impl Iterator<Item = Tok>) -> impl Iterator<Item = Statement> {
         let mut eself = Self {
             index: -1,
             current: Tok::None,
@@ -55,14 +57,14 @@ impl Parser {
         };
         eself.next();
 
-        let mut op_vec: Vec<Op> = vec![];
+        let mut staments_vec: Vec<Statement> = vec![];
 
         while (eself.index as usize) < eself.tokens.len() {
-            op_vec.push(eself.check_pattern());
+            staments_vec.push(eself.check_statement());
             consume!(eself, eself.current, Tok::Semicolon);
         }
 
-        op_vec.into_iter()
+        staments_vec.into_iter()
     }
 
     /// Consume one token, advancing the self.current by one position
@@ -78,6 +80,42 @@ impl Parser {
         } else {
             self.current = Tok::Eof
         }
+    }
+
+    fn check_statement(&mut self) -> Statement {
+        match self.current {
+            Tok::Write => self.write_statement(),
+            Tok::Writeln => self.writeln_statement(),
+            Tok::Let => self.assign_statement(),
+            _ => Statement::Op(self.check_pattern())
+        }
+    }
+
+    fn write_statement(&mut self) -> Statement {
+        self.next();
+        let to_write = self.check_statement();
+        Statement::Write(Box::new(to_write))
+    }
+
+    fn writeln_statement(&mut self) -> Statement {
+        self.next();
+        let to_write = self.check_statement();
+        Statement::Writeln(Box::new(to_write))
+    }
+
+    fn assign_statement(&mut self) -> Statement {
+        self.next();
+        if consume!(self.current, Tok::Ident(..)) {
+            let var_name = match &self.current {
+                Tok::Ident(id) => id.clone(),
+                _ => unreachable!()
+            };
+            self.next();
+
+            consume!(self, self.current, Tok::Assign);
+            let value = self.check_statement();
+            Statement::Assign(var_name, Box::new(value))
+        } else { unreachable!() }
     }
 
     /// Check what's the current Op
