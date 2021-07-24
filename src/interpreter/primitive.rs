@@ -138,6 +138,7 @@ impl Primitive {
             Self::Bool(false) => false,
             Self::None => false,
             Self::Number(x) if x.abs() < f64::EPSILON => false,
+            Self::Str(b) if b.as_str() == "" => false,
             _ => true
         }
     }
@@ -146,7 +147,7 @@ impl Primitive {
         match self {
             Self::Number(n) => Some(*n),
             Self::Str(..) => None,
-            Self::Bool(b) => Some(*b as i32 as f64),
+            Self::Bool(..) => None,
             Self::None => None
         }
     }

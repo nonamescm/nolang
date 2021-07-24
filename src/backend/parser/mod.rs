@@ -47,7 +47,7 @@ impl Parser {
 
         while (eself.index as usize) < eself.tokens.len() {
             staments_vec.push(eself.check_statement());
-            consume!(eself, eself.current, Tok::Semicolon);
+            consume!(eself, eself.current, Tok::Semicolon | Tok::Eof);
         }
 
         staments_vec.into_iter()

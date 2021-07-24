@@ -60,7 +60,7 @@ impl Interpreter {
         match prim {
             Literal::Bool(b) => Primitive::Bool(b),
             Literal::None => Primitive::None,
-            Literal::String(ref s) => Primitive::Str(s.clone()),
+            Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op.clone()),
             Literal::Number(n) => Primitive::Number(n),
             Literal::VarNormal(v) => {
@@ -68,7 +68,7 @@ impl Interpreter {
                     *self.variables.get(&v).unwrap_or_else(|| {
                         crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1)
                     })
-                ).clone()
+                ).to_owned()
             }
             _ => todo!() // I still not implemented variables
         }
