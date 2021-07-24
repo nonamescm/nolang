@@ -9,4 +9,3 @@ pub enum Op {
     Binary(Box<Op>, Tok, Box<Op>),
     Grouping(Box<Op>),
 }
-

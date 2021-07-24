@@ -15,7 +15,7 @@ impl Interpreter {
         };
 
         loop {
-            println!("{:?}", &eself.evaluate(eself.operations[eself.index].clone()));
+            eself.evaluate(eself.operations[eself.index].clone());
             if !eself.next(){ break }
         }
     }

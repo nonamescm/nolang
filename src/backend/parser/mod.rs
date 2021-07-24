@@ -25,10 +25,11 @@ macro_rules! consume {
             crate::err!(
                 custom
                 format!(
-                    "expected one of {:?} found {:?}",
+                    "ParseError: expected one of: {:?} found {:?} on line {}",
                     [ $(stringify!($tokens)),+ ],
-                    $current
-                ) => 1
+                    $current,
+                    $self.line
+                ).replace("\"", "").replace("[", "").replace("]", "") => 1
             )
         }
         $self.next();
@@ -58,6 +59,7 @@ impl Parser {
 
         while (eself.index as usize) < eself.tokens.len() {
             op_vec.push(eself.check_pattern());
+            consume!(eself, eself.current, Tok::Semicolon);
         }
 
         op_vec.into_iter()
@@ -68,6 +70,7 @@ impl Parser {
         self.index += 1;
         if (self.index as usize) < self.tokens.len() {
             if self.tokens[self.index as usize] == Tok::Newline {
+                self.line += 1;
                 self.next()
             } else {
                 self.current = self.tokens[self.index as usize].clone()
