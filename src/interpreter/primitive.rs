@@ -1,9 +1,5 @@
 use crate::error;
-use std::{
-    cmp, fmt,
-    hash::{Hash, Hasher},
-    ops,
-};
+use std::{cmp, fmt, ops};
 
 #[derive(Debug, Clone)]
 /// Nolang primitive types
@@ -14,7 +10,10 @@ pub enum Primitive {
     None,
 }
 
-impl Eq for Primitive {}
+pub trait IntoPrimitive {
+    fn into_pri(self) -> Primitive;
+}
+
 impl PartialEq for Primitive {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -23,17 +22,6 @@ impl PartialEq for Primitive {
             (Self::Bool(s_bool), Self::Bool(o_bool)) => s_bool == o_bool,
             (Self::None, Self::None) => true,
             _ => error!("TypeError"; "can't compare {} with {} using == or ~=", self, other => 1),
-        }
-    }
-}
-
-impl Hash for Primitive {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Self::Bool(b) => b.hash(state),
-            Self::Str(s) => s.hash(state),
-            Self::None => ().hash(state),
-            Self::Number(n) => n.to_bits().hash(state),
         }
     }
 }
@@ -148,5 +136,23 @@ impl Primitive {
             Self::Bool(..) => None,
             Self::None => None,
         }
+    }
+}
+
+impl IntoPrimitive for bool {
+    fn into_pri(self) -> Primitive {
+        Primitive::Bool(self)
+    }
+}
+
+impl IntoPrimitive for String {
+    fn into_pri(self) -> Primitive {
+        Primitive::Str(self)
+    }
+}
+
+impl IntoPrimitive for f64 {
+    fn into_pri(self) -> Primitive {
+        Primitive::Number(self)
     }
 }

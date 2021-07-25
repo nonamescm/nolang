@@ -1,24 +1,15 @@
 #[macro_use]
 mod primitive;
-use primitive::Primitive;
+mod debug;
+mod interpret;
+
+pub use debug::InterpreterDebug;
+pub use interpret::interpret;
+
+use primitive::{IntoPrimitive, Primitive};
 use std::collections::HashMap;
 
 use crate::backend::{Literal, Op, Statement, Tokens as Tok};
-
-pub fn interpret(operations: impl Iterator<Item = Statement>) {
-    let mut runtime = Interpreter {
-        statements: operations.collect(),
-        index: 0,
-        variables: HashMap::new(),
-    };
-
-    loop {
-        runtime.statement(runtime.statements[runtime.index].clone());
-        if !runtime.next() {
-            break;
-        }
-    }
-}
 
 /// The Interpreter implementation
 struct Interpreter {
@@ -35,6 +26,7 @@ impl Interpreter {
         self.index < self.statements.len()
     }
 
+    /// check what's the current statement and send it for the correct evaluator
     fn statement(&mut self, statement: Statement) -> Primitive {
         match statement {
             Statement::Op(op) => self.evaluate(op),
@@ -43,11 +35,11 @@ impl Interpreter {
             Statement::Assign(var, value) => self.s_eval_assign(var, value),
             Statement::Block(statements) => self.s_eval_block(statements),
             #[allow(unreachable_patterns)]
-            // for when I implement new statements and want to test them on the parser
-            _ => unimplemented!(),
+            _ => unimplemented!(), // for when I implement new statements and want to test them on the parser
         }
     }
 
+    /// evaluator for the block `do <OP>* done`
     fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
         for st in statements.into_iter() {
             self.statement(st);
@@ -112,12 +104,14 @@ impl Interpreter {
             Tok::Slash => self.evaluate(right) / self.evaluate(left),
 
             // Comparisons
-            Tok::Comp => Primitive::Bool(self.evaluate(right) == self.evaluate(left)),
-            Tok::Different => Primitive::Bool(self.evaluate(right) != self.evaluate(left)),
-            Tok::Gt => Primitive::Bool(self.evaluate(right) > self.evaluate(left)),
-            Tok::GtOrEq => Primitive::Bool(self.evaluate(right) >= self.evaluate(left)),
-            Tok::Lt => Primitive::Bool(self.evaluate(right) < self.evaluate(left)),
-            Tok::LtOrEq => Primitive::Bool(self.evaluate(right) <= self.evaluate(left)),
+            Tok::Comp => (self.evaluate(right) == self.evaluate(left)).into_pri(),
+            Tok::Different => (self.evaluate(right) != self.evaluate(left)).into_pri(),
+            Tok::Gt => (self.evaluate(right) > self.evaluate(left)).into_pri(),
+            Tok::GtOrEq => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
+            Tok::Lt => (self.evaluate(right) < self.evaluate(left)).into_pri(),
+            Tok::LtOrEq => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
+
+            // should not reach this since I've covered all binary operations
             _ => unreachable!(),
         }
     }
@@ -131,41 +125,6 @@ impl Interpreter {
                 self.eval_binary((**left).clone(), op, (**right).clone())
             }
             Op::Grouping(ref op) => self.evaluate(*op.clone()),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct InterpreterDebug {
-    variables: HashMap<String, Primitive>,
-}
-
-impl InterpreterDebug {
-    pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement>) {
-        let mut runtime = Interpreter {
-            statements: operations.collect(),
-            index: 0,
-            variables: self.variables.clone(),
-        };
-
-        loop {
-            println!(
-                "=> {}",
-                runtime.statement(runtime.statements[runtime.index].clone())
-            );
-            if !runtime.next() {
-                break;
-            }
-        }
-
-        self.variables = runtime.variables
-    }
-}
-
-impl Default for InterpreterDebug {
-    fn default() -> Self {
-        Self {
-            variables: HashMap::new(),
         }
     }
 }
