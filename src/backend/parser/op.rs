@@ -1,5 +1,5 @@
-use super::literal::Literal;
 use super::super::tokens::Tokens as Tok;
+use super::literal::Literal;
 
 /// Operations Enum, you can think of it as `Expr` in most parsers
 #[derive(Debug, Clone)]

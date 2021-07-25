@@ -2,12 +2,12 @@ mod lexer;
 mod parser;
 mod tokens;
 
-pub use {
-    parser::{Op, Literal, Statement},
-    tokens::Tokens
-};
 use lexer::Lexer;
 use parser::Parser;
+pub use {
+    parser::{Literal, Op, Statement},
+    tokens::Tokens,
+};
 
 pub fn parse(input: String) -> impl Iterator<Item = Statement> {
     Parser::parse(Lexer::lex(input))

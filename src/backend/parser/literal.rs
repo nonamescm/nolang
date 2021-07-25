@@ -8,7 +8,7 @@ pub enum Literal {
     Bool(bool),
     Number(f64),
     Operation(Op),
-    None
+    None,
 }
 
 impl Literal {
@@ -17,7 +17,7 @@ impl Literal {
             Self::Bool(false) => false,
             Self::None => false,
             Self::Number(x) if x == 0.0 => false,
-            _ => true
+            _ => true,
         }
     }
 }

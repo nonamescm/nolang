@@ -3,11 +3,7 @@ pub mod interpreter;
 
 mod util;
 
-pub use util::{
-    interpret_file::interpret_file,
-    repl::repl,
-    colors::Colors,
-};
+pub use util::{colors::Colors, interpret_file::interpret_file, repl::repl};
 
 #[macro_export]
 macro_rules! error {

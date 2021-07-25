@@ -5,5 +5,5 @@ pub enum Statement {
     Op(Op),
     Write(Op),
     Writeln(Op),
-    Block(Vec<Statement>)
+    Block(Vec<Statement>),
 }

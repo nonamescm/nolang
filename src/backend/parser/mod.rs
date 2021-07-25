@@ -1,11 +1,11 @@
-mod op;
 mod literal;
+mod op;
 mod statement;
 
-pub use literal::Literal;
-pub use statement::Statement;
-pub use op::Op;
 use super::tokens::Tokens as Tok;
+pub use literal::Literal;
+pub use op::Op;
+pub use statement::Statement;
 
 /// Check if a token matches and panic if it doesn't, returns ()
 macro_rules! consume {
@@ -125,7 +125,7 @@ impl Parser {
         if consume!(self.current, Tok::Ident(..)) {
             let var_name = match &self.current {
                 Tok::Ident(id) => id.to_string(),
-                _ => unreachable!()
+                _ => unreachable!(),
             };
             self.next();
             consume!(self, self.current, Tok::Assign);
@@ -134,7 +134,9 @@ impl Parser {
             consume!(self, self.current, Tok::Semicolon);
 
             Statement::Assign(var_name, value)
-        } else { unreachable!() }
+        } else {
+            unreachable!()
+        }
     }
 
     /// Check what's the current Op

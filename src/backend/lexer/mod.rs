@@ -141,7 +141,9 @@ impl Lexer {
                         crate::error!("ParseError"; "keyword `{}` used as name on line {}", ident, self.line => 1)
                     }
                     None if !ident.is_empty() => Tok::LocalIdent(ident),
-                    None => crate::error!("ParseError"; "Unexpected `:` on line {}", self.line => 1),
+                    None => {
+                        crate::error!("ParseError"; "Unexpected `:` on line {}", self.line => 1)
+                    }
                 }
             }
             '\'' | '"' => {

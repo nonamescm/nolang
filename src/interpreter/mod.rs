@@ -3,18 +3,20 @@ mod primitive;
 use primitive::Primitive;
 use std::collections::HashMap;
 
-use crate::backend::{Literal, Statement, Op, Tokens as Tok};
+use crate::backend::{Literal, Op, Statement, Tokens as Tok};
 
 pub fn interpret(operations: impl Iterator<Item = Statement>) {
     let mut runtime = Interpreter {
         statements: operations.collect(),
         index: 0,
-        variables: HashMap::new()
+        variables: HashMap::new(),
     };
 
     loop {
         runtime.statement(runtime.statements[runtime.index].clone());
-        if !runtime.next(){ break }
+        if !runtime.next() {
+            break;
+        }
     }
 }
 
@@ -22,7 +24,7 @@ pub fn interpret(operations: impl Iterator<Item = Statement>) {
 struct Interpreter {
     statements: Vec<Statement>,
     index: usize,
-    variables: HashMap<String, Primitive>
+    variables: HashMap<String, Primitive>,
 }
 
 impl Interpreter {
@@ -40,8 +42,9 @@ impl Interpreter {
             Statement::Writeln(value) => self.s_eval_writeln(value),
             Statement::Assign(var, value) => self.s_eval_assign(var, value),
             Statement::Block(statements) => self.s_eval_block(statements),
-            #[allow(unreachable_patterns)] // for when I implement new statements and want to test them on the parser
-            _ => unimplemented!()
+            #[allow(unreachable_patterns)]
+            // for when I implement new statements and want to test them on the parser
+            _ => unimplemented!(),
         }
     }
 
@@ -82,14 +85,11 @@ impl Interpreter {
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op.clone()),
             Literal::Number(n) => Primitive::Number(n),
-            Literal::VarNormal(v) => {
-                (
-                    *self.variables.get(&v).unwrap_or_else(|| {
-                        crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1)
-                    })
-                ).to_owned()
-            }
-            _ => todo!() // I still not implemented variables
+            Literal::VarNormal(v) => (*self.variables.get(&v).unwrap_or_else(
+                || crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1),
+            ))
+            .to_owned(),
+            _ => todo!(), // I still not implemented variables
         }
     }
 
@@ -98,7 +98,7 @@ impl Interpreter {
         match op {
             Tok::Minus => -self.evaluate(Op::Primary(Box::new(right))),
             Tok::Not => Primitive::Bool(!self.evaluate(Op::Primary(Box::new(right)))),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -118,7 +118,7 @@ impl Interpreter {
             Tok::GtOrEq => Primitive::Bool(self.evaluate(right) >= self.evaluate(left)),
             Tok::Lt => Primitive::Bool(self.evaluate(right) < self.evaluate(left)),
             Tok::LtOrEq => Primitive::Bool(self.evaluate(right) <= self.evaluate(left)),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -127,33 +127,35 @@ impl Interpreter {
         match operation {
             Op::Primary(ref value) => self.eval_primary((**value).clone()),
             Op::Unary(ref op, ref right) => self.eval_unary(op, (**right).clone()),
-            Op::Binary(ref left, ref op, ref right) => self.eval_binary((**left).clone(), op, (**right).clone()),
-            Op::Grouping(ref op) => self.evaluate(*op.clone())
+            Op::Binary(ref left, ref op, ref right) => {
+                self.eval_binary((**left).clone(), op, (**right).clone())
+            }
+            Op::Grouping(ref op) => self.evaluate(*op.clone()),
         }
     }
 }
 
 #[derive(Clone)]
 pub struct InterpreterDebug {
-    variables: HashMap<String, Primitive>
+    variables: HashMap<String, Primitive>,
 }
 
 impl InterpreterDebug {
-    pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement> + Sync + Send + 'static) {
+    pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement>) {
         let mut runtime = Interpreter {
             statements: operations.collect(),
             index: 0,
-            variables: self.variables.clone()
+            variables: self.variables.clone(),
         };
 
         loop {
             println!(
                 "=> {}",
-                runtime.statement(
-                    runtime.statements[runtime.index].clone()
-                )
+                runtime.statement(runtime.statements[runtime.index].clone())
             );
-            if !runtime.next(){ break }
+            if !runtime.next() {
+                break;
+            }
         }
 
         self.variables = runtime.variables
@@ -162,6 +164,8 @@ impl InterpreterDebug {
 
 impl Default for InterpreterDebug {
     fn default() -> Self {
-        Self { variables: HashMap::new() }
+        Self {
+            variables: HashMap::new(),
+        }
     }
 }
