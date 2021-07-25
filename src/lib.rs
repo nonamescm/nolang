@@ -1,7 +1,13 @@
-pub mod colors;
 pub mod backend;
 pub mod interpreter;
-use colors::Colors;
+
+mod util;
+
+pub use util::{
+    interpret_file::interpret_file,
+    repl::repl,
+    colors::Colors,
+};
 
 #[macro_export]
 macro_rules! error {
