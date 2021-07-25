@@ -1,6 +1,10 @@
 use nolang::colors::Colors;
+use std::sync::Mutex;
 use nolang::{
-    interpreter::Interpreter,
+    interpreter::{
+        interpret,
+        InterpreterDebug
+    },
     backend::{lex, parse}
 };
 
@@ -20,17 +24,17 @@ fn main() -> IOResult<()> {
     if args().filter(|x| !x.starts_with('-')).count() < 2 {
         repl(flairs.as_slice())?;
     } else {
-        interpret()?;
+        read_file()?;
     }
     Ok(())
 }
 
-fn interpret() -> IOResult<()> {
+fn read_file() -> IOResult<()> {
     let mut arguments = args();
     arguments.next();
 
     for file in arguments {
-        Interpreter::interpret(parse(read_to_string(file)?));
+        interpret(parse(read_to_string(file)?));
     }
     Ok(())
 }
@@ -63,9 +67,23 @@ fn repl(arguments: &[&str]) -> IOResult<()> {
             println!("{:#?}", lex(input).collect::<Vec<_>>())
         }
         Some(e) => panic!("Unrecognized option `{}`", e),
-        None => loop {
-            let input = print_read()?;
-            Interpreter::interpret(parse(input.to_string()));
+        None => {
+            loop {
+                let runtime_debug = Mutex::new(
+                    InterpreterDebug::default()
+                );
+
+                loop {
+                    let input = print_read()?;
+                    std::panic::catch_unwind(|| {
+                        runtime_debug.lock().unwrap()
+                            .interpret_debug(
+                                parse(input.to_string())
+                            );
+                    }).unwrap_or_default();
+                    if runtime_debug.is_poisoned() { break }
+                }
+            }
         }
     }
 }

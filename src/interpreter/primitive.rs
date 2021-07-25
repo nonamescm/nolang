@@ -42,10 +42,10 @@ impl Hash for Primitive {
 impl fmt::Display for Primitive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let raw = match self {
-            Self::Bool(true) => "true".to_owned(),
-            Self::Bool(false) => "false".to_owned(),
-            Self::None => "none".to_owned(),
-            Self::Str(s) => format!(r#""{}""#, s),
+            Self::Bool(true) => "true".to_string(),
+            Self::Bool(false) => "false".to_string(),
+            Self::None => "none".to_string(),
+            Self::Str(s) => s.to_string(),
             Self::Number(ref n) => n.to_string()
         };
         write!(f, "{}", raw)

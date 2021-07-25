@@ -21,6 +21,8 @@ macro_rules! error {
             )
         );
         eprintln!($($format_args),+);
-        std::process::exit($exit_value)
+
+        std::panic::set_hook(Box::new(|_| {}));
+        panic!()
     }}
 }

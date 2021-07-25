@@ -5,26 +5,28 @@ use std::collections::HashMap;
 
 use crate::backend::{Literal, Statement, Op, Tokens as Tok};
 
-pub struct Interpreter {
+pub fn interpret(operations: impl Iterator<Item = Statement>) {
+    let mut runtime = Interpreter {
+        statements: operations.collect(),
+        index: 0,
+        variables: HashMap::new()
+    };
+
+    loop {
+        runtime.statement(runtime.statements[runtime.index].clone());
+        if !runtime.next(){ break }
+    }
+}
+
+/// The Interpreter implementation
+struct Interpreter {
     statements: Vec<Statement>,
     index: usize,
     variables: HashMap<String, Primitive>
 }
 
 impl Interpreter {
-    pub fn interpret(operations: impl Iterator<Item = Statement>) {
-        let mut eself = Self {
-            statements: operations.collect(),
-            index: 0,
-            variables: HashMap::new()
-        };
-
-        loop {
-            eself.statement(eself.statements[eself.index].clone());
-            if !eself.next(){ break }
-        }
-    }
-
+    /// Advance the index by one
     fn next(&mut self) -> bool {
         self.index += 1;
 
@@ -34,25 +36,42 @@ impl Interpreter {
     fn statement(&mut self, statement: Statement) -> Primitive {
         match statement {
             Statement::Op(op) => self.evaluate(op),
-            Statement::Write(value) => {
-                print!("{}", self.statement(*value));
-                Primitive::None
-            }
-            Statement::Writeln(value) => {
-                println!("{}", self.statement(*value));
-                Primitive::None
-            }
-            Statement::Assign(var, value) => {
-                let value = self.statement(*value);
-                if self.variables.get(&var).is_some() {
-                    crate::error!("TypeError"; "tried to reassign global constant {}", var.to_string() => 1)
-                }
-                self.variables.insert(var, value);
-                Primitive::None
-            }
-            #[allow(unreachable_patterns)] // for when I implement new statements and want to them on the parser
+            Statement::Write(value) => self.s_eval_write(value),
+            Statement::Writeln(value) => self.s_eval_writeln(value),
+            Statement::Assign(var, value) => self.s_eval_assign(var, value),
+            Statement::Block(statements) => self.s_eval_block(statements),
+            #[allow(unreachable_patterns)] // for when I implement new statements and want to test them on the parser
             _ => unimplemented!()
         }
+    }
+
+    fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
+        for st in statements.into_iter() {
+            self.statement(st);
+        }
+        Primitive::None
+    }
+
+    /// `write <OP>;` statement evaluator
+    fn s_eval_write(&mut self, value: Op) -> Primitive {
+        print!("{}", self.evaluate(value));
+        Primitive::None
+    }
+
+    /// `writeln <OP>;` statement evaluator
+    fn s_eval_writeln(&mut self, value: Op) -> Primitive {
+        println!("{}", self.evaluate(value));
+        Primitive::None
+    }
+
+    /// Assignment `let x = <OP>;` evaluator
+    fn s_eval_assign(&mut self, var: String, value: Op) -> Primitive {
+        let value = self.evaluate(value);
+        if self.variables.get(&var).is_some() {
+            crate::error!("TypeError"; "tried to reassign global constant {}", var => 1)
+        }
+        self.variables.insert(var, value);
+        Primitive::None
     }
 
     /// Eval primary expressions, that are just the minimal possible expression
@@ -111,5 +130,38 @@ impl Interpreter {
             Op::Binary(ref left, ref op, ref right) => self.eval_binary((**left).clone(), op, (**right).clone()),
             Op::Grouping(ref op) => self.evaluate(*op.clone())
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct InterpreterDebug {
+    variables: HashMap<String, Primitive>
+}
+
+impl InterpreterDebug {
+    pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement> + Sync + Send + 'static) {
+        let mut runtime = Interpreter {
+            statements: operations.collect(),
+            index: 0,
+            variables: self.variables.clone()
+        };
+
+        loop {
+            println!(
+                "=> {}",
+                runtime.statement(
+                    runtime.statements[runtime.index].clone()
+                )
+            );
+            if !runtime.next(){ break }
+        }
+
+        self.variables = runtime.variables
+    }
+}
+
+impl Default for InterpreterDebug {
+    fn default() -> Self {
+        Self { variables: HashMap::new() }
     }
 }
