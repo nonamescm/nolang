@@ -5,7 +5,6 @@ pub enum Tokens {
     Eof,
 
     // value fields
-    LocalIdent(String), // local identifier, like: $symbol = 20
     Ident(String),      // identifier, like: let main = 1
     Number(f64),        // number
     Str(String),
@@ -96,7 +95,6 @@ impl std::fmt::Display for Tokens {
                 Percent => s("%"),
                 Concat => s(".."),
 
-                LocalIdent(ref l) => format!(":{}", l),
                 Ident(ref l) => l.clone(),
                 Number(n) => n.to_string(),
                 Str(ref s) => s.clone(),
@@ -153,7 +151,6 @@ impl Tokens {
                 | Self::False
                 | Self::None
                 | Self::Ident(..)
-                | Self::LocalIdent(..)
         )
     }
 
@@ -162,7 +159,7 @@ impl Tokens {
     }
 
     pub fn is_ident(&self) -> bool {
-        matches!(*self, Self::LocalIdent(_) | Self::Ident(_))
+        matches!(*self, Self::Ident(_))
     }
 
     pub fn is_comparison(&self) -> bool {

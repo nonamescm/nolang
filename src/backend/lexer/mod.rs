@@ -132,20 +132,6 @@ impl Lexer {
             '|' => Tok::Pipe,
 
             // Identifiers and constants
-            ':' => {
-                self.next();
-                get_val!(self; is_ch_valid(&self.ch) => ident);
-
-                match keyword_get_tok(&ident) {
-                    Some(ident) => {
-                        crate::error!("LexerError"; "keyword `{}` used as name on line {}", ident, self.line => 1)
-                    }
-                    None if !ident.is_empty() => Tok::LocalIdent(ident),
-                    None => {
-                        crate::error!("LexerError"; "Unexpected `:` on line {}", self.line => 1)
-                    }
-                }
-            }
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();

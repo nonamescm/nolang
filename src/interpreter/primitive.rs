@@ -45,7 +45,7 @@ impl ops::Neg for Primitive {
             Self::Number(n) => -n,
             Self::Bool(true) => -1f64,
             Self::Bool(false) => 0f64,
-            _ => error!("TypeError"; "can't use `-` operator with {}", self => 1)
+            _ => error!("TypeError"; "can't use `-` operator with {}", self => 1),
         }
     }
 }
@@ -99,7 +99,6 @@ impl ops::Div for Primitive {
     }
 }
 
-
 impl cmp::PartialEq for Primitive {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -150,14 +149,14 @@ impl Primitive {
     pub fn and(self, rhs: Self) -> Primitive {
         match self.to_bool() {
             true => self,
-            false => rhs
+            false => rhs,
         }
     }
 
     pub fn or(&self, rhs: Self) -> Self {
         match self.to_bool() {
             true => rhs,
-            false => Self::Bool(false)
+            false => Self::Bool(false),
         }
     }
 }

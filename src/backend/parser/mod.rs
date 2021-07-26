@@ -153,7 +153,6 @@ impl Parser {
             Tok::Number(n) => Literal::Number(*n),
             Tok::Str(s) => Literal::String(s.to_string()),
             Tok::Ident(id) => Literal::VarNormal(id.to_string()),
-            Tok::LocalIdent(id) => Literal::VarLocal(id.to_string()),
             Tok::Lparen => {
                 self.next();
                 let operation = self.operation();

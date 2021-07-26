@@ -72,6 +72,8 @@ impl Interpreter {
     }
 
     /// Eval primary expressions, that are just the minimal possible expression
+    #[rustfmt::skip]
+    // I like some syntax on this function but rustfmt removes it
     fn eval_primary(&mut self, prim: Literal) -> Primitive {
         match prim {
             Literal::Bool(b) => Primitive::Bool(b),
@@ -79,22 +81,22 @@ impl Interpreter {
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op.clone()),
             Literal::Number(n) => Primitive::Number(n),
-            Literal::VarNormal(v) => (*self.variables.get(&v).unwrap_or_else(
-                || crate::error!("ReferenceError"; "acessing undefined variable {}", v => 1),
-            )).to_owned(),
-            _ => todo!(), // I still not implemented variables
+            Literal::VarNormal(v) =>
+            (
+                *self.variables.get(&v).unwrap_or_else(
+                    || crate::error!("ReferenceError"; "acessing undefined variable {}", v => 1)
+                )
+            ).to_owned(),
+            #[allow(unreachable_patterns)]
+            _ => todo!(), // for when I add a new primary operator to the parser
         }
     }
 
     /// Unary expression evaluator
     fn eval_unary(&mut self, op: &Tok, right: Literal) -> Primitive {
         match op {
-            Tok::Minus => Primitive::Number(-self.evaluate(
-                Op::Primary(Box::new(right))
-            )),
-            Tok::Not   => Primitive::Bool(!self.evaluate(
-                Op::Primary(Box::new(right))
-            )),
+            Tok::Minus => Primitive::Number(-self.evaluate(Op::Primary(Box::new(right)))),
+            Tok::Not => Primitive::Bool(!self.evaluate(Op::Primary(Box::new(right)))),
             _ => unreachable!(),
         }
     }
@@ -103,24 +105,24 @@ impl Interpreter {
     fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
         match op {
             // operations
-            Tok::Plus      => self.evaluate(right) + self.evaluate(left),
-            Tok::Minus     => (self.evaluate(right) - self.evaluate(left)).into_pri(),
-            Tok::Asterisk  => (self.evaluate(right) * self.evaluate(left)).into_pri(),
-            Tok::Slash     => (self.evaluate(right) / self.evaluate(left)).into_pri(),
+            Tok::Plus => self.evaluate(right) + self.evaluate(left),
+            Tok::Minus => (self.evaluate(right) - self.evaluate(left)).into_pri(),
+            Tok::Asterisk => (self.evaluate(right) * self.evaluate(left)).into_pri(),
+            Tok::Slash => (self.evaluate(right) / self.evaluate(left)).into_pri(),
 
             // Comparisons
-            Tok::Comp      => (self.evaluate(right) == self.evaluate(left)).into_pri(),
+            Tok::Comp => (self.evaluate(right) == self.evaluate(left)).into_pri(),
             Tok::Different => (self.evaluate(right) != self.evaluate(left)).into_pri(),
 
-            Tok::Gt        => (self.evaluate(right) > self.evaluate(left)).into_pri(),
-            Tok::GtOrEq    => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
+            Tok::Gt => (self.evaluate(right) > self.evaluate(left)).into_pri(),
+            Tok::GtOrEq => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
 
-            Tok::Lt        => (self.evaluate(right) < self.evaluate(left)).into_pri(),
-            Tok::LtOrEq    => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
+            Tok::Lt => (self.evaluate(right) < self.evaluate(left)).into_pri(),
+            Tok::LtOrEq => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
 
             // Logical operators
-            Tok::And       => self.evaluate(right).and(self.evaluate(left)),
-            Tok::Or        => self.evaluate(right).or(self.evaluate(left)),
+            Tok::And => self.evaluate(right).and(self.evaluate(left)),
+            Tok::Or => self.evaluate(right).or(self.evaluate(left)),
 
             // should not reach this since I've covered all binary operations
             _ => unreachable!(),

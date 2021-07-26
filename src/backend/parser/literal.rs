@@ -3,7 +3,6 @@ use super::Op;
 #[derive(Debug, Clone)]
 pub enum Literal {
     VarNormal(String),
-    VarLocal(String),
     String(String),
     Bool(bool),
     Number(f64),
