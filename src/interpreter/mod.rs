@@ -42,22 +42,20 @@ impl Interpreter {
 
     /// evaluator for the block `do <Statement>;* done`
     fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
-        for st in statements.into_iter() {
-            self.statement(st);
-        }
+        interpret(statements.into_iter(), Some(self.variables.clone()));
         Primitive::None
     }
 
     /// `write <OP>;` statement evaluator
     fn s_eval_write(&mut self, value: Op) -> Primitive {
-        write!(stdout(), "{}", self.evaluate(value)).unwrap();
+        print!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
     }
 
     /// `writeln <OP>;` statement evaluator
     fn s_eval_writeln(&mut self, value: Op) -> Primitive {
-        writeln!(stdout(), "{}", self.evaluate(value)).unwrap();
+        println!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
     }
@@ -65,6 +63,7 @@ impl Interpreter {
     /// Assignment `let x = <OP>;` evaluator
     fn s_eval_assign(&mut self, var: String, value: Op) -> Primitive {
         let value = self.evaluate(value);
+
         if self.variables.get(&var).is_some() {
             crate::error!("TypeError"; "tried to reassign global constant {}", var => 1)
         }
@@ -81,7 +80,7 @@ impl Interpreter {
             Literal::Operation(ref op) => self.evaluate(op.clone()),
             Literal::Number(n) => Primitive::Number(n),
             Literal::VarNormal(v) => (*self.variables.get(&v).unwrap_or_else(
-                || crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1),
+                || crate::error!("ReferenceError"; "acessing undefined variable {}", v => 1),
             )).to_owned(),
             _ => todo!(), // I still not implemented variables
         }
