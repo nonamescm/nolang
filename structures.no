@@ -2,16 +2,16 @@
 let a = 10;
 
 let fib => (:n)
-	if n <= 1 do
+	if n <= 1; do
 		return fib(:n - 1);
-	done
+	done;
 	return :n;
 ;;
 
-for :i in 1, 2000 do
+for :i in 1, 2000; do
 	writeln("KK", :i);
-done
+done;
 
-while true do
+while true; do
 	writeln("OI");
-done
+done;
