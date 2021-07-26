@@ -39,7 +39,7 @@ impl Interpreter {
         }
     }
 
-    /// evaluator for the block `do <OP>* done`
+    /// evaluator for the block `do <Statement>;* done`
     fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
         for st in statements.into_iter() {
             self.statement(st);
@@ -79,8 +79,7 @@ impl Interpreter {
             Literal::Number(n) => Primitive::Number(n),
             Literal::VarNormal(v) => (*self.variables.get(&v).unwrap_or_else(
                 || crate::error!("RuntimeError"; "acessing undefined variable {}", v => 1),
-            ))
-            .to_owned(),
+            )).to_owned(),
             _ => todo!(), // I still not implemented variables
         }
     }
@@ -88,8 +87,12 @@ impl Interpreter {
     /// Unary expression evaluator
     fn eval_unary(&mut self, op: &Tok, right: Literal) -> Primitive {
         match op {
-            Tok::Minus => -self.evaluate(Op::Primary(Box::new(right))),
-            Tok::Not => Primitive::Bool(!self.evaluate(Op::Primary(Box::new(right)))),
+            Tok::Minus => Primitive::Number(-self.evaluate(
+                Op::Primary(Box::new(right))
+            )),
+            Tok::Not   => Primitive::Bool(!self.evaluate(
+                Op::Primary(Box::new(right))
+            )),
             _ => unreachable!(),
         }
     }
@@ -98,18 +101,24 @@ impl Interpreter {
     fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
         match op {
             // operations
-            Tok::Plus => self.evaluate(right) + self.evaluate(left),
-            Tok::Minus => self.evaluate(right) - self.evaluate(left),
-            Tok::Asterisk => self.evaluate(right) * self.evaluate(left),
-            Tok::Slash => self.evaluate(right) / self.evaluate(left),
+            Tok::Plus      => self.evaluate(right) + self.evaluate(left),
+            Tok::Minus     => (self.evaluate(right) - self.evaluate(left)).into_pri(),
+            Tok::Asterisk  => (self.evaluate(right) * self.evaluate(left)).into_pri(),
+            Tok::Slash     => (self.evaluate(right) / self.evaluate(left)).into_pri(),
 
             // Comparisons
-            Tok::Comp => (self.evaluate(right) == self.evaluate(left)).into_pri(),
+            Tok::Comp      => (self.evaluate(right) == self.evaluate(left)).into_pri(),
             Tok::Different => (self.evaluate(right) != self.evaluate(left)).into_pri(),
-            Tok::Gt => (self.evaluate(right) > self.evaluate(left)).into_pri(),
-            Tok::GtOrEq => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
-            Tok::Lt => (self.evaluate(right) < self.evaluate(left)).into_pri(),
-            Tok::LtOrEq => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
+
+            Tok::Gt        => (self.evaluate(right) > self.evaluate(left)).into_pri(),
+            Tok::GtOrEq    => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
+
+            Tok::Lt        => (self.evaluate(right) < self.evaluate(left)).into_pri(),
+            Tok::LtOrEq    => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
+
+            // Logical operators
+            Tok::And       => self.evaluate(right).and(self.evaluate(left)),
+            Tok::Or        => self.evaluate(right).or(self.evaluate(left)),
 
             // should not reach this since I've covered all binary operations
             _ => unreachable!(),
@@ -119,10 +128,10 @@ impl Interpreter {
     /// Minimal wrapper that sends the Op to the correct evaluator
     fn evaluate(&mut self, operation: Op) -> Primitive {
         match operation {
-            Op::Primary(ref value) => self.eval_primary((**value).clone()),
-            Op::Unary(ref op, ref right) => self.eval_unary(op, (**right).clone()),
+            Op::Primary(ref value) => self.eval_primary(*value.clone()),
+            Op::Unary(ref op, ref right) => self.eval_unary(op, *right.clone()),
             Op::Binary(ref left, ref op, ref right) => {
-                self.eval_binary((**left).clone(), op, (**right).clone())
+                self.eval_binary(*left.clone(), op, *right.clone())
             }
             Op::Grouping(ref op) => self.evaluate(*op.clone()),
         }

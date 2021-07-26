@@ -14,18 +14,6 @@ pub trait IntoPrimitive {
     fn into_pri(self) -> Primitive;
 }
 
-impl PartialEq for Primitive {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Str(s_str), Self::Str(o_str)) => s_str == o_str,
-            (Self::Number(s_num), Self::Number(o_num)) => s_num == o_num,
-            (Self::Bool(s_bool), Self::Bool(o_bool)) => s_bool == o_bool,
-            (Self::None, Self::None) => true,
-            _ => error!("TypeError"; "can't compare {} with {} using == or ~=", self, other => 1),
-        }
-    }
-}
-
 impl fmt::Display for Primitive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let raw = match self {
@@ -42,21 +30,22 @@ impl fmt::Display for Primitive {
 impl ops::Not for Primitive {
     type Output = bool;
 
+    #[inline]
     fn not(self) -> Self::Output {
         !self.to_bool()
     }
 }
 
 impl ops::Neg for Primitive {
-    type Output = Self;
+    type Output = f64;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         match self {
-            Self::Number(n) => Primitive::Number(-n),
-            Self::Bool(true) => Primitive::Number(-1f64),
-            Self::Bool(false) => Primitive::Number(0f64),
-            Self::Str(s) => Primitive::Number(s.len() as f64),
-            Self::None => Primitive::Number(0f64),
+            Self::Number(n) => -n,
+            Self::Bool(true) => -1f64,
+            Self::Bool(false) => 0f64,
+            _ => error!("TypeError"; "can't use `-` operator with {}", self => 1)
         }
     }
 }
@@ -64,48 +53,68 @@ impl ops::Neg for Primitive {
 impl ops::Add for Primitive {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        match (rhs.to_number(), self.to_number()) {
-            (Some(o_num), Some(s_num)) => Self::Number(o_num + s_num),
+        match (&rhs, &self) {
+            (Self::Number(o_num), Self::Number(s_num)) => Self::Number(o_num + s_num),
+            (Self::Str(o_str), Self::Str(s_str)) => Self::Str(o_str.to_string() + s_str),
             _ => error!("TypeError"; "tried to use `+` operator between {} and {}", rhs, self => 1),
         }
     }
 }
 
 impl ops::Sub for Primitive {
-    type Output = Self;
+    type Output = f64;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
-            (Some(o_num), Some(s_num)) => Self::Number(o_num - s_num),
+            (Some(o_num), Some(s_num)) => o_num - s_num,
             _ => error!("TypeError"; "tried to use `-` operator between {} and {}", rhs, self => 1),
         }
     }
 }
 
 impl ops::Mul for Primitive {
-    type Output = Self;
+    type Output = f64;
 
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
-            (Some(o_num), Some(s_num)) => Self::Number(o_num * s_num),
+            (Some(o_num), Some(s_num)) => o_num * s_num,
             _ => error!("TypeError"; "tried to use `*` operator between {} and {}", rhs, self => 1),
         }
     }
 }
 
 impl ops::Div for Primitive {
-    type Output = Self;
+    type Output = f64;
 
+    #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         match (rhs.to_number(), self.to_number()) {
-            (Some(o_num), Some(s_num)) => Self::Number(o_num / s_num),
+            (Some(o_num), Some(s_num)) => o_num / s_num,
             _ => error!("TypeError"; "tried to use `/` operator between {} and {}", rhs, self => 1),
         }
     }
 }
 
+
+impl cmp::PartialEq for Primitive {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Str(s_str), Self::Str(o_str)) => s_str == o_str,
+            (Self::Number(s_num), Self::Number(o_num)) => s_num == o_num,
+            (Self::Bool(s_bool), Self::Bool(o_bool)) => s_bool == o_bool,
+            (Self::None, Self::None) => true,
+            _ => error!("TypeError"; "can't compare {} with {} using == or ~=", self, other => 1),
+        }
+    }
+}
+
 impl cmp::PartialOrd for Primitive {
+    #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         match (self, other) {
             (Self::Number(s_num), Self::Number(o_num)) => o_num.partial_cmp(s_num),
@@ -137,22 +146,46 @@ impl Primitive {
             Self::None => None,
         }
     }
+
+    pub fn and(self, rhs: Self) -> Primitive {
+        match self.to_bool() {
+            true => self,
+            false => rhs
+        }
+    }
+
+    pub fn or(&self, rhs: Self) -> Self {
+        match self.to_bool() {
+            true => rhs,
+            false => Self::Bool(false)
+        }
+    }
 }
 
 impl IntoPrimitive for bool {
+    #[inline]
     fn into_pri(self) -> Primitive {
         Primitive::Bool(self)
     }
 }
 
 impl IntoPrimitive for String {
+    #[inline]
     fn into_pri(self) -> Primitive {
         Primitive::Str(self)
     }
 }
 
 impl IntoPrimitive for f64 {
+    #[inline]
     fn into_pri(self) -> Primitive {
         Primitive::Number(self)
+    }
+}
+
+impl IntoPrimitive for Primitive {
+    #[inline]
+    fn into_pri(self) -> Primitive {
+        self
     }
 }

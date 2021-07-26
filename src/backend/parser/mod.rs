@@ -208,13 +208,41 @@ impl Parser {
         left
     }
 
-    fn comparison_op(&mut self) -> Op {
+    fn and_op(&mut self) -> Op {
         let mut left = self.term_op();
+
+        while matches!(self.current, Tok::And) {
+            let operator = self.current.clone();
+            self.next();
+            let right = self.factor_op();
+
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
+        }
+
+        left
+    }
+
+    fn or_op(&mut self) -> Op {
+        let mut left = self.and_op();
+
+        while matches!(self.current, Tok::Or) {
+            let operator = self.current.clone();
+            self.next();
+            let right = self.and_op();
+
+            left = Op::Binary(Box::new(left), operator, Box::new(right))
+        }
+
+        left
+    }
+
+    fn comparison_op(&mut self) -> Op {
+        let mut left = self.or_op();
 
         while matches!(self.current, Tok::Gt | Tok::GtOrEq | Tok::Lt | Tok::LtOrEq) {
             let operator = self.current.clone();
             self.next();
-            let right = self.term_op();
+            let right = self.or_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
         }
