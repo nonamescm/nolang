@@ -86,9 +86,9 @@ impl Parser {
     fn block_stat(&mut self) -> Statement {
         let line = self.line;
         let mut vec_stat = vec![];
+        self.next();
 
         while !matches!(self.current, Tok::Done) {
-            self.next();
             vec_stat.push(self.statement());
 
             if matches!(self.current, Tok::Eof) {

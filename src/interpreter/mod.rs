@@ -8,6 +8,7 @@ pub use interpret::interpret;
 
 use primitive::{IntoPrimitive, Primitive};
 use std::collections::HashMap;
+use std::io::{stdout, Write};
 
 use crate::backend::{Literal, Op, Statement, Tokens as Tok};
 
@@ -49,13 +50,15 @@ impl Interpreter {
 
     /// `write <OP>;` statement evaluator
     fn s_eval_write(&mut self, value: Op) -> Primitive {
-        print!("{}", self.evaluate(value));
+        write!(stdout(), "{}", self.evaluate(value)).unwrap();
+        stdout().flush().unwrap();
         Primitive::None
     }
 
     /// `writeln <OP>;` statement evaluator
     fn s_eval_writeln(&mut self, value: Op) -> Primitive {
-        println!("{}", self.evaluate(value));
+        writeln!(stdout(), "{}", self.evaluate(value)).unwrap();
+        stdout().flush().unwrap();
         Primitive::None
     }
 
