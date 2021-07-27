@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    backend::{lex, parse},
+    frontend::{lex, parse},
     interpreter::InterpreterDebug,
     util::colors::Colors,
 };

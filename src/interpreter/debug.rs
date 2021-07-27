@@ -1,6 +1,6 @@
 use super::Interpreter;
 use super::Primitive;
-use crate::backend::Statement;
+use crate::frontend::Statement;
 use std::collections::HashMap;
 
 pub struct InterpreterDebug {

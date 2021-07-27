@@ -10,7 +10,7 @@ use primitive::{IntoPrimitive, Primitive};
 use std::collections::HashMap;
 use std::io::{stdout, Write};
 
-use crate::backend::{Literal, Op, Statement, Tokens as Tok};
+use crate::frontend::{Literal, Op, Statement, Tokens as Tok};
 
 /// The Interpreter implementation
 struct Interpreter {

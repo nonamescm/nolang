@@ -1,5 +1,5 @@
 use super::{Interpreter, Primitive};
-use crate::backend::Statement;
+use crate::frontend::Statement;
 use std::collections::HashMap;
 
 /// Wrapper interpreter function

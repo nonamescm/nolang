@@ -1,4 +1,4 @@
-use crate::{backend::parse, interpreter::interpret};
+use crate::{frontend::parse, interpreter::interpret};
 use std::{env::args, fs::read_to_string, io};
 
 pub fn interpret_file() -> io::Result<()> {
