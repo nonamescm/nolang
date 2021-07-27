@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub fn interpret(
     operations: impl Iterator<Item = Statement>,
     vars: Option<HashMap<String, Primitive>>,
-) {
+) -> Primitive {
     let mut runtime = Interpreter {
         statements: operations.collect(),
         index: 0,
@@ -14,9 +14,9 @@ pub fn interpret(
     };
 
     loop {
-        runtime.statement(runtime.statements[runtime.index].clone());
+        let current = runtime.statement(runtime.statements[runtime.index].clone());
         if !runtime.next() {
-            break;
+            break current;
         }
     }
 }

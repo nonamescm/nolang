@@ -156,10 +156,9 @@ impl Parser {
             self.next();
             consume!(self, self.current, Tok::Assign);
 
-            let value = self.operation();
-            consume!(self, self.current, Tok::Semicolon);
+            let value = self.statement();
 
-            Statement::Assign(var_name, value)
+            Statement::Assign(var_name, Box::new(value))
         } else {
             unreachable!()
         }

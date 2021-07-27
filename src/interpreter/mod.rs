@@ -33,7 +33,7 @@ impl Interpreter {
             Statement::Op(op) => self.evaluate(op),
             Statement::Write(value) => self.s_eval_write(value),
             Statement::Writeln(value) => self.s_eval_writeln(value),
-            Statement::Assign(var, value) => self.s_eval_assign(var, value),
+            Statement::Assign(var, value) => self.s_eval_assign(var, *value),
             Statement::Block(statements) => self.s_eval_block(statements),
             Statement::If(condition, block, else_block) => self.s_eval_if(condition, *block, else_block),
             #[allow(unreachable_patterns)]
@@ -43,18 +43,17 @@ impl Interpreter {
 
     /// evaluator for the block `do <Statement>;* done`
     fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
-        interpret(statements.into_iter(), Some(self.variables.clone()));
-        Primitive::None
+        interpret(statements.into_iter(), Some(self.variables.clone()))
     }
 
     fn s_eval_if(&mut self, condition: Op, block: Statement, else_block: Option<Box<Statement>>) -> Primitive {
         if self.evaluate(condition).to_bool() {
-            self.statement(block);
+            self.statement(block)
         } else if else_block.is_some() {
-            self.statement(*else_block.unwrap());
+            self.statement(*else_block.unwrap())
+        } else {
+            crate::error!("Syntax Error"; "expected else after if" => 1)
         }
-
-        Primitive::None
     }
 
     /// `write <OP>;` statement evaluator
@@ -72,8 +71,8 @@ impl Interpreter {
     }
 
     /// Assignment `let x = <OP>;` evaluator
-    fn s_eval_assign(&mut self, var: String, value: Op) -> Primitive {
-        let value = self.evaluate(value);
+    fn s_eval_assign(&mut self, var: String, value: Statement) -> Primitive {
+        let value = self.statement(value);
 
         if self.variables.get(&var).is_some() {
             crate::error!("TypeError"; "tried to reassign global constant {}", var => 1)
