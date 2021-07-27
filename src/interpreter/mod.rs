@@ -132,8 +132,8 @@ impl Interpreter {
             Tok::LtOrEq => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
 
             // Logical operators
-            Tok::And => self.evaluate(right).and(self.evaluate(left)),
-            Tok::Or => self.evaluate(right).or(self.evaluate(left)),
+            Tok::And => self.evaluate(right).and(&mut || self.evaluate(left.clone())),
+            Tok::Or => self.evaluate(right).or(&mut || self.evaluate(left.clone())),
 
             // should not reach this since I've covered all binary operations
             _ => unreachable!(),

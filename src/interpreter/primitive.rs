@@ -146,17 +146,17 @@ impl Primitive {
         }
     }
 
-    pub fn and(self, rhs: Self) -> Primitive {
+    pub fn and(self, rhs: &mut dyn FnMut() -> Self) -> Self {
         match self.to_bool() {
-            true => self,
-            false => rhs,
+            true => rhs(),
+            false => self,
         }
     }
 
-    pub fn or(&self, rhs: Self) -> Self {
+    pub fn or(self, rhs: &mut dyn FnMut() -> Self) -> Self {
         match self.to_bool() {
-            true => rhs,
-            false => Self::Bool(false),
+            true => self,
+            false => rhs(),
         }
     }
 }
