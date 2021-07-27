@@ -35,7 +35,7 @@ impl Interpreter {
             Statement::Writeln(value) => self.s_eval_writeln(value),
             Statement::Assign(var, value) => self.s_eval_assign(var, value),
             Statement::Block(statements) => self.s_eval_block(statements),
-            Statement::If(condition, block, else_block) => self.s_eval_if(condition, block, else_block),
+            Statement::If(condition, block, else_block) => self.s_eval_if(condition, *block, else_block),
             #[allow(unreachable_patterns)]
             _ => unimplemented!(), // for when I implement new statements and want to test them on the parser
         }
@@ -47,9 +47,9 @@ impl Interpreter {
         Primitive::None
     }
 
-    fn s_eval_if(&mut self, condition: Op, block: Box<Statement>, else_block: Option<Box<Statement>>) -> Primitive {
+    fn s_eval_if(&mut self, condition: Op, block: Statement, else_block: Option<Box<Statement>>) -> Primitive {
         if self.evaluate(condition).to_bool() {
-            self.statement(*block);
+            self.statement(block);
         } else if else_block.is_some() {
             self.statement(*else_block.unwrap());
         }
