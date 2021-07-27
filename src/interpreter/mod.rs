@@ -97,7 +97,7 @@ impl Interpreter {
                 *self.variables.get(&v).unwrap_or_else(
                     || crate::error!("ReferenceError"; "acessing undefined variable {}", v => 1)
                 )
-            ).to_owned(),
+            ).clone(),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
         }

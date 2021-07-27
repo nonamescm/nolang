@@ -58,7 +58,7 @@ pub enum Tokens {
 
 impl std::fmt::Display for Tokens {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = |string: &str| string.to_owned(); // helper syntax sugar method
+        let s = |string: &str| string.to_string(); // helper syntax sugar method
 
         use Tokens::*;
         write!(
