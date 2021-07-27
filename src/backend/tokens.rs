@@ -22,8 +22,6 @@ pub enum Tokens {
     Else,
     Done,
     End, // `;;`
-    For,
-    While,
     Or,
     Not,
     And,
@@ -111,8 +109,6 @@ impl std::fmt::Display for Tokens {
                 Done => s("done"),
                 End => s(";;"),
 
-                For => s("for"),
-                While => s("while"),
                 If => s("if"),
                 Elif => s("elif"),
                 Else => s("else"),
@@ -175,8 +171,6 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "not" => Some(Tokens::Not),
         "return" => Some(Tokens::Return),
         "let" => Some(Tokens::Let),
-        "for" => Some(Tokens::For),
-        "while" => Some(Tokens::While),
         "if" => Some(Tokens::If),
         "elif" => Some(Tokens::Elif),
         "else" => Some(Tokens::Else),
