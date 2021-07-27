@@ -22,6 +22,7 @@ macro_rules! consume {
     ($self: ident, $current: expr, $($tokens:pat)|+) => {{
         consume!($current, $($tokens)|+);
         $self.next();
+        true
     }}
 }
 
@@ -90,7 +91,7 @@ impl Parser {
         let condition = self.operation();
         consume!(self, self.current, Tok::Semicolon);
         let body = self.statement();
-        
+
         if matches!(body, Statement::Assign(..)) {
             crate::error!("SyntaxError"; "tried to declare a variable from a if on line {}", line => 1)
         }
@@ -99,12 +100,12 @@ impl Parser {
             Tok::Else => {
                 self.next();
                 let else_body = self.statement();
-                Statement::If(condition, Box::new(body), Some(Box::new(else_body)))
+                Statement::If(condition, Box::new(body), Box::new(else_body))
             }
             Tok::Elif => {
-                Statement::If(condition, Box::new(body), Some(Box::new(self.if_stat())))
+                Statement::If(condition, Box::new(body), Box::new(self.if_stat()))
             }
-            _ => Statement::If(condition, Box::new(body), None)
+            _ => crate::error!("ParseError"; "expected `else` after if" => 1)
         }
 
     }
@@ -148,20 +149,42 @@ impl Parser {
 
     fn assign_stat(&mut self) -> Statement {
         self.next();
-        if consume!(self.current, Tok::Ident(..)) {
-            let var_name = match &self.current {
-                Tok::Ident(id) => id.to_string(),
-                _ => unreachable!(),
-            };
-            self.next();
-            consume!(self, self.current, Tok::Assign);
+        consume!(self.current, Tok::Ident(..));
 
+        let var_name = match &self.current {
+            Tok::Ident(id) => id.to_string(),
+            _ => unreachable!(),
+        };
+        self.next();
+
+        if matches!(self.current, Tok::Assign) {
+            consume!(self, self.current, Tok::Assign);
             let value = self.statement();
 
             Statement::Assign(var_name, Box::new(value))
-        } else {
-            unreachable!()
-        }
+        } else if consume!(self, self.current, Tok::ArrowAssign) {
+            consume!(self, self.current, Tok::Lparen);
+
+            let mut arguments = Vec::new();
+
+            while !matches!(self.current, Tok::Rparen) {
+                arguments.push(match &self.current {
+                    Tok::Ident(id) => id.to_string(),
+                    _ => crate::error!("ParseError"; "Expected variable name after function on line {}", self.line => 1),
+                });
+                self.next();
+
+                if !matches!(self.current, Tok::Rparen) {
+                    consume!(self, self.current, Tok::Comma);
+                }
+            }
+            self.next();
+            let block = Box::new(self.statement());
+
+            consume!(self, self.current, Tok::End);
+
+            Statement::FuncAssign(var_name, arguments, block)
+        } else { unreachable!() }
     }
 
     /// Check what's the current Op

@@ -46,13 +46,11 @@ impl Interpreter {
         interpret(statements.into_iter(), Some(self.variables.clone()))
     }
 
-    fn s_eval_if(&mut self, condition: Op, block: Statement, else_block: Option<Box<Statement>>) -> Primitive {
+    fn s_eval_if(&mut self, condition: Op, block: Statement, else_block: Box<Statement>) -> Primitive {
         if self.evaluate(condition).to_bool() {
             self.statement(block)
-        } else if else_block.is_some() {
-            self.statement(*else_block.unwrap())
         } else {
-            crate::error!("Syntax Error"; "expected else after if" => 1)
+            self.statement(*else_block)
         }
     }
 

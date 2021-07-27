@@ -5,10 +5,7 @@ use super::literal::Literal;
 #[derive(Debug, Clone)]
 pub enum Op {
     Primary(Box<Literal>),
-    Call(
-        Box<Op>, // called
-        Vec<Op>, // arguments
-    ),
+    Call(Box<Op>, Vec<Op>),
     Unary(Tok, Box<Literal>),
     Binary(Box<Op>, Tok, Box<Op>),
     Grouping(Box<Op>),
