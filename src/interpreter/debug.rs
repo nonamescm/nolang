@@ -31,8 +31,17 @@ impl InterpreterDebug {
 
 impl Default for InterpreterDebug {
     fn default() -> Self {
+        let mut variables = HashMap::new();
+        variables.insert(
+            "errorln".to_string(),
+            Primitive::Function(|_| {
+                eprintln!("Deu merda");
+                Primitive::None
+            })
+        );
+
         Self {
-            variables: HashMap::new(),
+            variables,
         }
     }
 }

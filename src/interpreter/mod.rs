@@ -139,6 +139,24 @@ impl Interpreter {
         }
     }
 
+    fn eval_call(&mut self, called: Op, arguments: Vec<Op>) -> Primitive {
+        match called {
+            Op::Primary(p) => match *p {
+                Literal::VarNormal(p) => {
+                    match self.variables.get(&p) {
+                        Some(v) => match v {
+                            Primitive::Function(func) => func(arguments.into_iter().map(|v| self.evaluate(v)).collect()),
+                            e => crate::error!("TypeError"; "can't call {}", e => 1)
+                        }
+                        _ => crate::error!("ReferenceError"; "tried to call undefined variable {}", p => 1)
+                    }
+                }
+                _ => unreachable!()
+            }
+            _ => unreachable!()
+        }
+    }
+
     /// Minimal wrapper that sends the Op to the correct evaluator
     fn evaluate(&mut self, operation: Op) -> Primitive {
         match operation {
@@ -148,6 +166,11 @@ impl Interpreter {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
             Op::Grouping(ref op) => self.evaluate(*op.clone()),
+            Op::Call(ref called, ref arguments) => self.eval_call(*called.clone(), arguments.clone()),
+
+            #[allow(unreachable_patterns)]
+            // for when I add a new Operation and want to test the parser before going to the
+            // interpreter
             _ => unimplemented!()
         }
     }

@@ -7,6 +7,7 @@ pub enum Primitive {
     Number(f64),
     Str(String),
     Bool(bool),
+    Function(fn(Vec<Primitive>) -> Primitive),
     None,
 }
 
@@ -22,6 +23,7 @@ impl fmt::Display for Primitive {
             Self::None => "none".to_string(),
             Self::Str(s) => s.to_string(),
             Self::Number(ref n) => n.to_string(),
+            Self::Function(..) => "<function>".to_string()
         };
         write!(f, "{}", raw)
     }
@@ -140,9 +142,7 @@ impl Primitive {
     pub fn to_number(&self) -> Option<f64> {
         match self {
             Self::Number(n) => Some(*n),
-            Self::Str(..) => None,
-            Self::Bool(..) => None,
-            Self::None => None,
+            _ => None
         }
     }
 
