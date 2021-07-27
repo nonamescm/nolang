@@ -18,6 +18,7 @@ pub enum Tokens {
     Return,
     Do,
     If,
+    Elif,
     Else,
     Done,
     End, // `;;`
@@ -95,9 +96,9 @@ impl std::fmt::Display for Tokens {
                 Percent => s("%"),
                 Concat => s(".."),
 
-                Ident(ref l) => l.clone(),
+                Ident(ref l) => l.to_string(),
                 Number(n) => n.to_string(),
-                Str(ref s) => s.clone(),
+                Str(ref s) => s.to_string(),
 
                 True => s("true"),
                 False => s("false"),
@@ -113,6 +114,7 @@ impl std::fmt::Display for Tokens {
                 For => s("for"),
                 While => s("while"),
                 If => s("if"),
+                Elif => s("elif"),
                 Else => s("else"),
 
                 Or => s("or"),
@@ -176,6 +178,7 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "for" => Some(Tokens::For),
         "while" => Some(Tokens::While),
         "if" => Some(Tokens::If),
+        "elif" => Some(Tokens::Elif),
         "else" => Some(Tokens::Else),
         "do" => Some(Tokens::Do),
         "done" => Some(Tokens::Done),
