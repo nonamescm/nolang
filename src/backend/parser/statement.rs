@@ -6,4 +6,9 @@ pub enum Statement {
     Write(Op),
     Writeln(Op),
     Block(Vec<Statement>),
+    If(
+        Op, // the conditional
+        Box<Statement>, // the body
+        Option<Box<Statement>>, // else block
+    ),
 }

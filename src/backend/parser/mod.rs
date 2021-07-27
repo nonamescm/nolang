@@ -74,6 +74,7 @@ impl Parser {
             Tok::Writeln => self.writeln_stat(),
             Tok::Let => self.assign_stat(),
             Tok::Do => self.block_stat(),
+            Tok::If => self.if_stat(),
             _ => {
                 let x = Statement::Op(self.operation());
                 consume!(self, self.current, Tok::Semicolon);
@@ -81,6 +82,31 @@ impl Parser {
             }
         };
         operation
+    }
+
+    fn if_stat(&mut self) -> Statement {
+        let line = self.line;
+        self.next(); // skips the current `if` toke
+        let condition = self.operation();
+        consume!(self, self.current, Tok::Semicolon);
+        let body = self.statement();
+        
+        if matches!(body, Statement::Assign(..)) {
+            crate::error!("SyntaxError"; "tried to declare a variable from a if on line {}", line => 1)
+        }
+
+        match self.current {
+            Tok::Else => {
+                self.next();
+                let else_body = self.statement();
+                Statement::If(condition, Box::new(body), Some(Box::new(else_body)))
+            }
+            Tok::Elif => {
+                Statement::If(condition, Box::new(body), Some(Box::new(self.if_stat())))
+            }
+            _ => Statement::If(condition, Box::new(body), None)
+        }
+
     }
 
     fn block_stat(&mut self) -> Statement {
