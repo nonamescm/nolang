@@ -192,15 +192,45 @@ impl Parser {
         Op::Primary(Box::new(literal))
     }
 
+    fn call_op(&mut self) -> Op {
+        let mut called = self.primary_op();
+
+        while matches!(self.current, Tok::Lparen) {
+            self.next();
+
+            let mut arguments = Vec::new();
+            while !matches!(self.current, Tok::Rparen) {
+                arguments.push(self.equality_op());
+
+                if matches!(self.current, Tok::Rparen) {
+                    break;
+                }
+
+                consume!(self, self.current, Tok::Comma);
+            }
+            self.next();
+            match called {
+                Op::Primary(ref p) => match **p {
+                    Literal::VarNormal(..) => (),
+                    _ => crate::error!("TypeError"; "Can't call `{:?}`", p => 1)
+                }
+                Op::Call(..) => (),
+                _ => crate::error!("TypeError"; "Can't call `{:?}`", called => 1)
+            }
+            called = Op::Call(Box::new(called), arguments)
+        }
+        called
+    }
+
     /// Get unary operations, such as `not(<OP>)` and `-<OP>`
     fn unary_op(&mut self) -> Op {
         if matches!(self.current, Tok::Minus | Tok::Not) {
             let operator = self.current.clone();
             self.next();
-            let right = self.unary_op();
+            let right = self.call_op();
             Op::Unary(operator, Box::new(Literal::Operation(right)))
         } else {
-            self.primary_op()
+            self.call_op()
         }
     }
 

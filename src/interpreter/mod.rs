@@ -149,6 +149,7 @@ impl Interpreter {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
             Op::Grouping(ref op) => self.evaluate(*op.clone()),
+            _ => unimplemented!()
         }
     }
 }
