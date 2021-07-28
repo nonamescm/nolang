@@ -102,12 +102,9 @@ impl Parser {
                 let else_body = self.statement();
                 Statement::If(condition, Box::new(body), Box::new(else_body))
             }
-            Tok::Elif => {
-                Statement::If(condition, Box::new(body), Box::new(self.if_stat()))
-            }
-            _ => crate::error!("ParseError"; "expected `else` after if" => 1)
+            Tok::Elif => Statement::If(condition, Box::new(body), Box::new(self.if_stat())),
+            _ => crate::error!("ParseError"; "expected `else` after if" => 1),
         }
-
     }
 
     fn block_stat(&mut self) -> Statement {
@@ -182,7 +179,9 @@ impl Parser {
             consume!(self, self.current, Tok::End);
 
             Statement::FuncAssign(var_name, arguments, block)
-        } else { unreachable!() }
+        } else {
+            unreachable!()
+        }
     }
 
     /// Check what's the current Op
@@ -232,10 +231,10 @@ impl Parser {
             match called {
                 Op::Primary(ref p) => match **p {
                     Literal::VarNormal(..) => (),
-                    _ => crate::error!("TypeError"; "Can't call `{:?}`", p => 1)
-                }
+                    _ => crate::error!("TypeError"; "Can't call `{:?}`", p => 1),
+                },
                 Op::Call(..) => (),
-                _ => crate::error!("TypeError"; "Can't call `{:?}`", called => 1)
+                _ => crate::error!("TypeError"; "Can't call `{:?}`", called => 1),
             }
             called = Op::Call(Box::new(called), arguments)
         }

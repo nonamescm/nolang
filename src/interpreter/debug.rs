@@ -33,8 +33,6 @@ impl Default for InterpreterDebug {
     fn default() -> Self {
         let variables = HashMap::new();
 
-        Self {
-            variables,
-        }
+        Self { variables }
     }
 }

@@ -1,6 +1,6 @@
 use super::Statement;
 use crate::error;
-use std::{cmp, fmt, ops, collections::HashMap};
+use std::{cmp, collections::HashMap, fmt, ops};
 
 /// Nolang primitive types
 #[derive(Debug, Clone)]
@@ -24,7 +24,7 @@ impl fmt::Display for Primitive {
             Self::None => "none".to_string(),
             Self::Str(s) => s.to_string(),
             Self::Number(ref n) => n.to_string(),
-            Self::Function(..) => "<function>".to_string()
+            Self::Function(..) => "<function>".to_string(),
         };
         write!(f, "{}", raw)
     }
@@ -143,7 +143,7 @@ impl Primitive {
     pub fn to_number(&self) -> Option<f64> {
         match self {
             Self::Number(n) => Some(*n),
-            _ => None
+            _ => None,
         }
     }
 

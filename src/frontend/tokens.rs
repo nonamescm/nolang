@@ -5,8 +5,8 @@ pub enum Tokens {
     Eof,
 
     // value fields
-    Ident(String),      // identifier, like: let main = 1
-    Number(f64),        // number
+    Ident(String), // identifier, like: let main = 1
+    Number(f64),   // number
     Str(String),
 
     // reserved keywords

@@ -35,15 +35,27 @@ impl Interpreter {
             Statement::Writeln(value) => self.s_eval_writeln(&value),
             Statement::Assign(var, value) => self.s_eval_assign(var, *value),
             Statement::Block(statements) => self.s_eval_block(statements),
-            Statement::If(condition, block, else_block) => self.s_eval_if(&condition, *block, else_block),
-            Statement::FuncAssign(name, arguments, block) => self.s_eval_func_assign(name, arguments, *block),
+            Statement::If(condition, block, else_block) => {
+                self.s_eval_if(&condition, *block, else_block)
+            }
+            Statement::FuncAssign(name, arguments, block) => {
+                self.s_eval_func_assign(name, arguments, *block)
+            }
             #[allow(unreachable_patterns)]
             _ => unimplemented!(), // for when I implement new statements and want to test them on the parser
         }
     }
 
-    fn s_eval_func_assign(&mut self, name: String, arguments: Vec<String>, block: Statement) -> Primitive {
-        self.variables.insert(name, Primitive::Function(block, arguments, self.variables.clone()));
+    fn s_eval_func_assign(
+        &mut self,
+        name: String,
+        arguments: Vec<String>,
+        block: Statement,
+    ) -> Primitive {
+        self.variables.insert(
+            name,
+            Primitive::Function(block, arguments, self.variables.clone()),
+        );
 
         Primitive::None
     }
@@ -53,7 +65,12 @@ impl Interpreter {
         interpret(statements.into_iter(), Some(self.variables.clone()))
     }
 
-    fn s_eval_if(&mut self, condition: &Op, block: Statement, else_block: Box<Statement>) -> Primitive {
+    fn s_eval_if(
+        &mut self,
+        condition: &Op,
+        block: Statement,
+        else_block: Box<Statement>,
+    ) -> Primitive {
         if self.evaluate(condition).to_bool() {
             self.statement(block)
         } else {
@@ -180,12 +197,14 @@ impl Interpreter {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
             Op::Grouping(ref op) => self.evaluate(&*op.clone()),
-            Op::Call(ref called, ref arguments) => self.eval_call(*called.clone(), arguments.clone()),
+            Op::Call(ref called, ref arguments) => {
+                self.eval_call(*called.clone(), arguments.clone())
+            }
 
             #[allow(unreachable_patterns)]
             // for when I add a new Operation and want to test the parser before going to the
             // interpreter
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 }
