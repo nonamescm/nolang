@@ -102,6 +102,18 @@ impl ops::Div for Primitive {
     }
 }
 
+impl ops::Rem for Primitive {
+    type Output = f64;
+
+    #[inline]
+    fn rem(self, rhs: Self) -> Self::Output {
+        match (rhs.to_number(), self.to_number()) {
+            (Some(o_num), Some(s_num)) => o_num % s_num,
+            _ => error!("TypeError"; "tried to use `%` operator between {} and {}", rhs, self => 1),
+        }
+    }
+}
+
 impl cmp::PartialEq for Primitive {
     #[inline]
     fn eq(&self, other: &Self) -> bool {

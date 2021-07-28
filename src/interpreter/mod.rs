@@ -168,6 +168,7 @@ impl Interpreter {
             Tok::Minus => (self.evaluate(&right) - self.evaluate(&left)).into_pri(),
             Tok::Asterisk => (self.evaluate(&right) * self.evaluate(&left)).into_pri(),
             Tok::Slash => (self.evaluate(&right) / self.evaluate(&left)).into_pri(),
+            Tok::Percent => (self.evaluate(&right) % self.evaluate(&left)).into_pri(),
 
             // Comparisons
             Tok::Comp => (self.evaluate(&right) == self.evaluate(&left)).into_pri(),
