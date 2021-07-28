@@ -45,13 +45,16 @@ pub fn repl(arguments: &[&str]) -> io::Result<()> {
             while !runtime.is_poisoned() {
                 let input = print_read()?;
 
-                catch_unwind(|| {
-                    runtime
-                        .lock()
-                        .unwrap()
-                        .interpret_debug(parse(input.to_string()))
-                })
-                .unwrap_or_default();
+                if input.trim() != "" {
+                    catch_unwind(|| {
+                        runtime
+                            .lock()
+                            .unwrap()
+                            .interpret_debug(parse(input.to_string()))
+                    })
+                    .unwrap_or_default();
+                    let _ = std::panic::take_hook();
+                }
             }
         },
     }
