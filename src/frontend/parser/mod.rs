@@ -71,8 +71,6 @@ impl Parser {
 
     fn statement(&mut self) -> Statement {
         let operation = match self.current {
-            Tok::Write => self.write_stat(),
-            Tok::Writeln => self.writeln_stat(),
             Tok::Let => self.assign_stat(),
             Tok::Do => self.block_stat(),
             Tok::If => self.if_stat(),
@@ -124,22 +122,6 @@ impl Parser {
         consume!(self, self.current, Tok::Semicolon);
 
         Statement::Block(vec_stat)
-    }
-
-    fn write_stat(&mut self) -> Statement {
-        self.next();
-        let to_write = self.operation();
-        consume!(self, self.current, Tok::Semicolon);
-
-        Statement::Write(to_write)
-    }
-
-    fn writeln_stat(&mut self) -> Statement {
-        self.next();
-        let to_write = self.operation();
-        consume!(self, self.current, Tok::Semicolon);
-
-        Statement::Writeln(to_write)
     }
 
     fn assign_stat(&mut self) -> Statement {

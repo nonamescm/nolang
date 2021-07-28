@@ -9,6 +9,7 @@ pub enum Primitive {
     Str(String),
     Bool(bool),
     Function(Statement, Vec<String>),
+    NativeFunc(fn(arg: Primitive) -> Primitive),
     None,
 }
 
@@ -25,6 +26,7 @@ impl fmt::Display for Primitive {
             Self::Str(s) => s.to_string(),
             Self::Number(ref n) => n.to_string(),
             Self::Function(..) => "<function>".to_string(),
+            Self::NativeFunc(..) => "<native function>".to_string()
         };
         write!(f, "{}", raw)
     }

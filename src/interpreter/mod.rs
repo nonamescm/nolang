@@ -21,8 +21,27 @@ pub struct Env {
 
 impl Default for Env {
     fn default() -> Self {
+        let mut current = HashMap::new();
+        current.insert(
+            "writeln".to_string(),
+            Primitive::NativeFunc(|arg: Primitive| {
+                println!("{}", arg);
+                stdout().flush().expect("Error writing line");
+                Primitive::None
+            })
+        );
+
+        current.insert(
+            "write".to_string(),
+            Primitive::NativeFunc(|arg: Primitive| {
+                println!("{}", arg);
+                stdout().flush().expect("Error writing line");
+                Primitive::None
+            })
+        );
+
         Self {
-            current: HashMap::new(),
+            current,
             over: None,
         }
     }
@@ -73,8 +92,6 @@ impl Interpreter {
     fn statement(&mut self, statement: Statement) -> Primitive {
         match statement {
             Statement::Op(op) => self.evaluate(&op),
-            Statement::Write(value) => self.s_eval_write(&value),
-            Statement::Writeln(value) => self.s_eval_writeln(&value),
             Statement::Assign(var, value) => self.s_eval_assign(var, *value),
             Statement::Block(statements) => self.s_eval_block(statements),
             Statement::If(condition, block, else_block) => {
@@ -111,20 +128,6 @@ impl Interpreter {
         } else {
             self.statement(else_block)
         }
-    }
-
-    /// `write <OP>;` statement evaluator
-    fn s_eval_write(&mut self, value: &Op) -> Primitive {
-        eprint!("{}", self.evaluate(value));
-        stdout().flush().unwrap();
-        Primitive::None
-    }
-
-    /// `writeln <OP>;` statement evaluator
-    fn s_eval_writeln(&mut self, value: &Op) -> Primitive {
-        eprintln!("{}", self.evaluate(value));
-        stdout().flush().unwrap();
-        Primitive::None
     }
 
     /// Assignment `let x = <OP>;` evaluator
@@ -181,7 +184,7 @@ impl Interpreter {
             Tok::LtOrEq => (self.evaluate(&right) <= self.evaluate(&left)).into_pri(),
 
             // Logical operators
-            Tok::And => self.evaluate(&right).and(&mut || self.evaluate(&left)),
+            Tok::And => self.evaluate(&right).and(&mut|| self.evaluate(&left)),
             Tok::Or => self.evaluate(&right).or(&mut || self.evaluate(&left)),
 
             // should not reach this since I've covered all binary operations
@@ -202,6 +205,12 @@ impl Interpreter {
                         let env = Env::new(env, Some(Rc::new(self.variables.clone())));
 
                         interpret(std::iter::once(block), Some(env))
+                    }
+                    Primitive::NativeFunc(func) => {
+                        if !matches!(arguments.len(), 1 | 0) {
+                            crate::error!("CallError"; "unwrong number of arguments passed for native function" => 1);
+                        }
+                        func(self.evaluate(&arguments[0]))
                     }
                     _ => unreachable!(),
                 },

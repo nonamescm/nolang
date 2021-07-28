@@ -1,5 +1,4 @@
-use super::Env;
-use super::Interpreter;
+use super::{Env, Interpreter};
 use crate::frontend::Statement;
 
 pub struct InterpreterDebug {

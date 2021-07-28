@@ -24,10 +24,6 @@ pub enum Tokens {
     Not,
     And,
 
-    // reserved statements
-    Write,   // print statement
-    Writeln, // println statement
-
     // Symbols
     Semicolon, // `;`
     Minus,
@@ -106,9 +102,6 @@ impl std::fmt::Display for Tokens {
                 Or => s("or"),
                 And => s("and"),
                 Not => s("not"),
-
-                Write => s("write"),
-                Writeln => s("writeln"),
             }
         )
     }
@@ -169,8 +162,6 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "none" => Some(Tokens::None),
         "and" => Some(Tokens::And),
         "or" => Some(Tokens::Or),
-        "write" => Some(Tokens::Write),
-        "writeln" => Some(Tokens::Writeln),
         "end" => Some(Tokens::End), // the same as `;;`
         _ => None,
     }

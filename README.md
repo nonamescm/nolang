@@ -18,14 +18,16 @@
 @ variable
 let x = 10;
 
+
 @ Power function
+
 let pow_by => (n, by)
     if by == 1;
         n;
     else n*pow_by(n, by-1);
 end
 
-writeln pow_by(2, 2);
+writeln(pow_by(2, 2));
 
 do
     let nome = "nolang";
