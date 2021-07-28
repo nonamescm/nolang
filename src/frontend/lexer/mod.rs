@@ -113,10 +113,6 @@ impl Lexer {
                 Tok::End
             }
             ';' => Tok::Semicolon,
-            '.' if self.peek('.') => {
-                self.next();
-                Tok::Concat
-            }
             '.' => Tok::Point,
 
             // Grouping
@@ -127,9 +123,6 @@ impl Lexer {
 
             // Comment
             '@' => self.ignore_comment(),
-
-            // Special symbols
-            '|' => Tok::Pipe,
 
             // Identifiers and constants
             '\'' | '"' => {

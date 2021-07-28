@@ -14,8 +14,6 @@ pub enum Tokens {
     False,
     None, // Null value
     Let,  // declare function/variable
-    In,
-    Return,
     Do,
     If,
     Elif,
@@ -49,11 +47,8 @@ pub enum Tokens {
     GtOrEq,      // `>=`
     Lt,          // `<`
     LtOrEq,      // `<=`
-    Pipe,        // `|`
     Comma,       // `,`
     Point,       // `.`
-    Concat,      // `..`
-    Underline,   // `_` used as statement on patterns
 }
 
 impl std::fmt::Display for Tokens {
@@ -80,9 +75,7 @@ impl std::fmt::Display for Tokens {
                 Lbrace => s("{"),
                 Rbrace => s("}"),
 
-                Pipe => s("|"),
                 Comma => s(","),
-                Underline => s("_"),
                 Newline => s("newline"),
                 Point => s("."),
                 Semicolon => s(";"),
@@ -92,7 +85,6 @@ impl std::fmt::Display for Tokens {
                 Asterisk => s("*"),
                 Slash => s("/"),
                 Percent => s("%"),
-                Concat => s(".."),
 
                 Ident(ref l) => l.to_string(),
                 Number(n) => n.to_string(),
@@ -103,8 +95,6 @@ impl std::fmt::Display for Tokens {
                 None => s("none"),
 
                 Let => s("let"),
-                In => s("in"),
-                Return => s("return"),
                 Do => s("do"),
                 Done => s("done"),
                 End => s(";;"),
@@ -167,9 +157,7 @@ impl Tokens {
 
 pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
     match k {
-        "in" => Some(Tokens::In),
         "not" => Some(Tokens::Not),
-        "return" => Some(Tokens::Return),
         "let" => Some(Tokens::Let),
         "if" => Some(Tokens::If),
         "elif" => Some(Tokens::Elif),
@@ -183,7 +171,7 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "or" => Some(Tokens::Or),
         "write" => Some(Tokens::Write),
         "writeln" => Some(Tokens::Writeln),
-        "_" => Some(Tokens::Underline),
+        "end" => Some(Tokens::End), // the same as `;;`
         _ => None,
     }
 }
