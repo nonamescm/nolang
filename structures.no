@@ -1,7 +1,0 @@
-@ existing structures for now
-let a = 10;
-
-let fib => (n) do
-	if n <= 1; return fib(n - 1);
-	return n;
-;;
