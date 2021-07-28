@@ -1,4 +1,4 @@
-use super::{Statement};
+use super::Statement;
 use crate::error;
 use std::{cmp, fmt, ops};
 

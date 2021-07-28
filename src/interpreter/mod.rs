@@ -16,12 +16,15 @@ use crate::frontend::{Literal, Op, Statement, Tokens as Tok};
 #[derive(Debug, Clone)]
 pub struct Env {
     current: HashMap<String, Primitive>,
-    over: Option<Rc<Env>>
+    over: Option<Rc<Env>>,
 }
 
 impl Default for Env {
     fn default() -> Self {
-        Self { current: HashMap::new(), over: None }
+        Self {
+            current: HashMap::new(),
+            over: None,
+        }
     }
 }
 
@@ -31,20 +34,22 @@ impl Env {
     }
 
     fn set(&mut self, name: String, value: Primitive) {
-        if &self.current.get(&name).is_none() == &true {
+        if self.current.get(&name).is_none() {
             self.current.insert(name, value);
         } else {
             crate::error!("TypeError"; "tried to reassign variable `{}`", name => 1)
         }
     }
 
-    fn get(&self, name: &String) -> Primitive {
+    fn get(&self, name: &str) -> Primitive {
         match self.current.get(name) {
             Some(p) => p.clone(),
             None => match &self.over {
-                Some(o) => o.get(&name),
-                None => crate::error!("ReferenceError"; "acessing undefined variable {}", name => 1)
-            }
+                Some(o) => o.get(name),
+                None => {
+                    crate::error!("ReferenceError"; "acessing undefined variable {}", name => 1)
+                }
+            },
         }
     }
 }
@@ -73,7 +78,7 @@ impl Interpreter {
             Statement::Assign(var, value) => self.s_eval_assign(var, *value),
             Statement::Block(statements) => self.s_eval_block(statements),
             Statement::If(condition, block, else_block) => {
-                self.s_eval_if(&condition, *block, else_block)
+                self.s_eval_if(&condition, *block, *else_block)
             }
             Statement::FuncAssign(name, arguments, block) => {
                 self.s_eval_func_assign(name, arguments, *block)
@@ -89,10 +94,8 @@ impl Interpreter {
         arguments: Vec<String>,
         block: Statement,
     ) -> Primitive {
-        self.variables.set(
-            name,
-            Primitive::Function(block, arguments),
-        );
+        self.variables
+            .set(name, Primitive::Function(block, arguments));
 
         Primitive::None
     }
@@ -102,16 +105,11 @@ impl Interpreter {
         interpret(statements.into_iter(), Some(self.variables.clone()))
     }
 
-    fn s_eval_if(
-        &mut self,
-        condition: &Op,
-        block: Statement,
-        else_block: Box<Statement>,
-    ) -> Primitive {
+    fn s_eval_if(&mut self, condition: &Op, block: Statement, else_block: Statement) -> Primitive {
         if self.evaluate(condition).to_bool() {
             self.statement(block)
         } else {
-            self.statement(*else_block)
+            self.statement(else_block)
         }
     }
 
@@ -147,7 +145,7 @@ impl Interpreter {
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
             Literal::Number(n) => Primitive::Number(n),
-            Literal::VarNormal(v) => (self.variables.get(&v)).clone(),
+            Literal::VarNormal(v) => self.variables.get(&v),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
         }
@@ -197,18 +195,18 @@ impl Interpreter {
                 Literal::VarNormal(p) => match self.variables.get(&p) {
                     Primitive::Function(block, args) => {
                         let env = args.iter().enumerate().map(|(index, key)| {
-                            (key.to_string(), self.evaluate(&arguments.get(index).unwrap_or_else(|| crate::error!("CallError"; "Missing arguments for function call" => 1))))
+                            (key.to_string(), self.evaluate(arguments.get(index).unwrap_or_else(|| crate::error!("CallError"; "Missing arguments for function call" => 1))))
                         }).collect::<HashMap<_, _>>();
 
                         let env = Env::new(env, Some(Rc::new(self.variables.clone())));
 
-                        interpret(std::iter::once(block.clone()), Some(env))
+                        interpret(std::iter::once(block), Some(env))
                     }
-                    _ => unreachable!()
-                }
-                _ => unreachable!()
-            }
-            _ => unreachable!()
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
         }
     }
 
