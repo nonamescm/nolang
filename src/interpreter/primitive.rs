@@ -1,13 +1,14 @@
+use super::Statement;
 use crate::error;
-use std::{cmp, fmt, ops};
+use std::{cmp, fmt, ops, collections::HashMap};
 
-#[derive(Debug, Clone)]
 /// Nolang primitive types
+#[derive(Debug, Clone)]
 pub enum Primitive {
     Number(f64),
     Str(String),
     Bool(bool),
-    Function(fn(Vec<Primitive>) -> Primitive),
+    Function(Statement, Vec<String>, HashMap<String, Primitive>),
     None,
 }
 

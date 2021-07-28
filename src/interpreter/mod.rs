@@ -30,15 +30,22 @@ impl Interpreter {
     /// check what's the current statement and send it for the correct evaluator
     fn statement(&mut self, statement: Statement) -> Primitive {
         match statement {
-            Statement::Op(op) => self.evaluate(op),
-            Statement::Write(value) => self.s_eval_write(value),
-            Statement::Writeln(value) => self.s_eval_writeln(value),
+            Statement::Op(op) => self.evaluate(&op),
+            Statement::Write(value) => self.s_eval_write(&value),
+            Statement::Writeln(value) => self.s_eval_writeln(&value),
             Statement::Assign(var, value) => self.s_eval_assign(var, *value),
             Statement::Block(statements) => self.s_eval_block(statements),
-            Statement::If(condition, block, else_block) => self.s_eval_if(condition, *block, else_block),
+            Statement::If(condition, block, else_block) => self.s_eval_if(&condition, *block, else_block),
+            Statement::FuncAssign(name, arguments, block) => self.s_eval_func_assign(name, arguments, *block),
             #[allow(unreachable_patterns)]
             _ => unimplemented!(), // for when I implement new statements and want to test them on the parser
         }
+    }
+
+    fn s_eval_func_assign(&mut self, name: String, arguments: Vec<String>, block: Statement) -> Primitive {
+        self.variables.insert(name, Primitive::Function(block, arguments, self.variables.clone()));
+
+        Primitive::None
     }
 
     /// evaluator for the block `do <Statement>;* done`
@@ -46,7 +53,7 @@ impl Interpreter {
         interpret(statements.into_iter(), Some(self.variables.clone()))
     }
 
-    fn s_eval_if(&mut self, condition: Op, block: Statement, else_block: Box<Statement>) -> Primitive {
+    fn s_eval_if(&mut self, condition: &Op, block: Statement, else_block: Box<Statement>) -> Primitive {
         if self.evaluate(condition).to_bool() {
             self.statement(block)
         } else {
@@ -55,14 +62,14 @@ impl Interpreter {
     }
 
     /// `write <OP>;` statement evaluator
-    fn s_eval_write(&mut self, value: Op) -> Primitive {
+    fn s_eval_write(&mut self, value: &Op) -> Primitive {
         print!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
     }
 
     /// `writeln <OP>;` statement evaluator
-    fn s_eval_writeln(&mut self, value: Op) -> Primitive {
+    fn s_eval_writeln(&mut self, value: &Op) -> Primitive {
         println!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
@@ -73,8 +80,9 @@ impl Interpreter {
         let value = self.statement(value);
 
         if self.variables.get(&var).is_some() {
-            crate::error!("TypeError"; "tried to reassign global constant {}", var => 1)
+            crate::error!("TypeError"; "tried to reassign variable `{}`", var => 1)
         }
+
         self.variables.insert(var, value);
         Primitive::None
     }
@@ -87,7 +95,7 @@ impl Interpreter {
             Literal::Bool(b) => Primitive::Bool(b),
             Literal::None => Primitive::None,
             Literal::String(ref s) => Primitive::Str(s.to_string()),
-            Literal::Operation(ref op) => self.evaluate(op.clone()),
+            Literal::Operation(ref op) => self.evaluate(op),
             Literal::Number(n) => Primitive::Number(n),
             Literal::VarNormal(v) =>
             (
@@ -103,8 +111,8 @@ impl Interpreter {
     /// Unary expression evaluator
     fn eval_unary(&mut self, op: &Tok, right: Literal) -> Primitive {
         match op {
-            Tok::Minus => Primitive::Number(-self.evaluate(Op::Primary(Box::new(right)))),
-            Tok::Not => Primitive::Bool(!self.evaluate(Op::Primary(Box::new(right)))),
+            Tok::Minus => Primitive::Number(-self.evaluate(&Op::Primary(Box::new(right)))),
+            Tok::Not => Primitive::Bool(!self.evaluate(&Op::Primary(Box::new(right)))),
             _ => unreachable!(),
         }
     }
@@ -113,24 +121,24 @@ impl Interpreter {
     fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
         match op {
             // operations
-            Tok::Plus => self.evaluate(right) + self.evaluate(left),
-            Tok::Minus => (self.evaluate(right) - self.evaluate(left)).into_pri(),
-            Tok::Asterisk => (self.evaluate(right) * self.evaluate(left)).into_pri(),
-            Tok::Slash => (self.evaluate(right) / self.evaluate(left)).into_pri(),
+            Tok::Plus => self.evaluate(&right) + self.evaluate(&left),
+            Tok::Minus => (self.evaluate(&right) - self.evaluate(&left)).into_pri(),
+            Tok::Asterisk => (self.evaluate(&right) * self.evaluate(&left)).into_pri(),
+            Tok::Slash => (self.evaluate(&right) / self.evaluate(&left)).into_pri(),
 
             // Comparisons
-            Tok::Comp => (self.evaluate(right) == self.evaluate(left)).into_pri(),
-            Tok::Different => (self.evaluate(right) != self.evaluate(left)).into_pri(),
+            Tok::Comp => (self.evaluate(&right) == self.evaluate(&left)).into_pri(),
+            Tok::Different => (self.evaluate(&right) != self.evaluate(&left)).into_pri(),
 
-            Tok::Gt => (self.evaluate(right) > self.evaluate(left)).into_pri(),
-            Tok::GtOrEq => (self.evaluate(right) >= self.evaluate(left)).into_pri(),
+            Tok::Gt => (self.evaluate(&right) > self.evaluate(&left)).into_pri(),
+            Tok::GtOrEq => (self.evaluate(&right) >= self.evaluate(&left)).into_pri(),
 
-            Tok::Lt => (self.evaluate(right) < self.evaluate(left)).into_pri(),
-            Tok::LtOrEq => (self.evaluate(right) <= self.evaluate(left)).into_pri(),
+            Tok::Lt => (self.evaluate(&right) < self.evaluate(&left)).into_pri(),
+            Tok::LtOrEq => (self.evaluate(&right) <= self.evaluate(&left)).into_pri(),
 
             // Logical operators
-            Tok::And => self.evaluate(right).and(&mut || self.evaluate(left.clone())),
-            Tok::Or => self.evaluate(right).or(&mut || self.evaluate(left.clone())),
+            Tok::And => self.evaluate(&right).and(&mut || self.evaluate(&left)),
+            Tok::Or => self.evaluate(&right).or(&mut || self.evaluate(&left)),
 
             // should not reach this since I've covered all binary operations
             _ => unreachable!(),
@@ -140,14 +148,22 @@ impl Interpreter {
     fn eval_call(&mut self, called: Op, arguments: Vec<Op>) -> Primitive {
         match called {
             Op::Primary(p) => match *p {
-                Literal::VarNormal(p) => {
-                    match self.variables.get(&p) {
-                        Some(v) => match v {
-                            Primitive::Function(func) => func(arguments.into_iter().map(|v| self.evaluate(v)).collect()),
-                            e => crate::error!("TypeError"; "can't call {}", e => 1)
-                        }
-                        _ => crate::error!("ReferenceError"; "tried to call undefined variable {}", p => 1)
+                #[allow(unused_parens)]
+                Literal::VarNormal(p) => match (
+                    self.variables.clone().get(&p).unwrap_or_else(
+                        || crate::error!("ReferenceError"; "tried to call undefined variable {}", p => 1)
+                    )
+                ) {
+                    Primitive::Function(block, args, _) => {
+                        let mut env = args.iter().enumerate().map(|(index, key)| {
+                            (key.to_string(), self.evaluate(&arguments.get(index).unwrap_or_else(|| crate::error!("CallError"; "Missing arguments for function call" => 1))))
+                        }).collect::<HashMap<_, _>>();
+
+                        env.extend(self.variables.clone());
+
+                        interpret(std::iter::once(block.clone()), Some(env))
                     }
+                    _ => unreachable!()
                 }
                 _ => unreachable!()
             }
@@ -156,14 +172,14 @@ impl Interpreter {
     }
 
     /// Minimal wrapper that sends the Op to the correct evaluator
-    fn evaluate(&mut self, operation: Op) -> Primitive {
+    fn evaluate(&mut self, operation: &Op) -> Primitive {
         match operation {
             Op::Primary(ref value) => self.eval_primary(*value.clone()),
             Op::Unary(ref op, ref right) => self.eval_unary(op, *right.clone()),
             Op::Binary(ref left, ref op, ref right) => {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
-            Op::Grouping(ref op) => self.evaluate(*op.clone()),
+            Op::Grouping(ref op) => self.evaluate(&*op.clone()),
             Op::Call(ref called, ref arguments) => self.eval_call(*called.clone(), arguments.clone()),
 
             #[allow(unreachable_patterns)]

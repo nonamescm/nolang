@@ -122,11 +122,9 @@ impl Parser {
                 crate::error!("ParseError"; "unclosed do block opened on line {}", line => 1)
             }
         }
-        consume!(self.current, Tok::Done);
-        self.next();
+        consume!(self, self.current, Tok::Done);
 
         consume!(self, self.current, Tok::Semicolon);
-        self.next();
 
         Statement::Block(vec_stat)
     }
