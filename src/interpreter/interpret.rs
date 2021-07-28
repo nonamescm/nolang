@@ -13,7 +13,7 @@ pub fn interpret(operations: impl Iterator<Item = Statement>, vars: Option<Env>)
         None => Interpreter {
             statements: operations.collect(),
             index: 0,
-            variables: Env::new(HashMap::new(), None),
+            variables: Env::default(),
         },
     };
 
