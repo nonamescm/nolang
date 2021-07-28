@@ -1,20 +1,18 @@
-# nolang
+<h1>nolang</h1>
 
-## A simple tree-walk interpreter written in rust
+<h2>A simple tree-walk interpreter written in rust</h2>
 
-<p align=center>
-	<a href="#why">Why?</a> • 
-	<a href="#syntax">syntax</a> • 
-	<a href="#todo">todo</a>
-</p>
+* <a href="#why">Why?</a>
+* <a href="#syntax">syntax</a>
+* <a href="#todo">todo</a>
 
-### Why
+<h3>Why</h3>
 
-<p align=center>Just to play with programming languages design</p>
+<p>Just to play with programming languages design</p>
 
-### Syntax
+<h3>Syntax</h3>
 
-<p align=center>all existing structures for now</p>
+<p>all existing structures for now</p>
 
 ```js
 @ variable
@@ -22,20 +20,20 @@ let x = 10;
 
 @ Power function
 let pow_by => (n, by)
-	if by == 1;
-		n;
-	else n*pow_by(n, by-1);
+    if by == 1;
+        n;
+    else n*pow_by(n, by-1);
 end
 
 writeln pow_by(2, 2);
 
 do
-	let nome = "nolang";
-	writeln nome + "!!";
+    let nome = "nolang";
+    writeln nome + "!!";
 done;
 ```
 
-### TODO
+<h3>TODO</h3>
 
 - [ ] Bytecode virtual machine
 - [ ] Types
