@@ -9,14 +9,51 @@ pub use interpret::interpret;
 use primitive::{IntoPrimitive, Primitive};
 use std::collections::HashMap;
 use std::io::{stdout, Write};
+use std::rc::Rc;
 
 use crate::frontend::{Literal, Op, Statement, Tokens as Tok};
+
+#[derive(Debug, Clone)]
+pub struct Env {
+    current: HashMap<String, Primitive>,
+    over: Option<Rc<Env>>
+}
+
+impl Default for Env {
+    fn default() -> Self {
+        Self { current: HashMap::new(), over: None }
+    }
+}
+
+impl Env {
+    fn new(current: HashMap<String, Primitive>, over: Option<Rc<Env>>) -> Self {
+        Self { current, over }
+    }
+
+    fn set(&mut self, name: String, value: Primitive) {
+        if &self.current.get(&name).is_none() == &true {
+            self.current.insert(name, value);
+        } else {
+            crate::error!("TypeError"; "tried to reassign variable `{}`", name => 1)
+        }
+    }
+
+    fn get(&self, name: &String) -> Primitive {
+        match self.current.get(name) {
+            Some(p) => p.clone(),
+            None => match &self.over {
+                Some(o) => o.get(&name),
+                None => crate::error!("ReferenceError"; "acessing undefined variable {}", name => 1)
+            }
+        }
+    }
+}
 
 /// The Interpreter implementation
 struct Interpreter {
     statements: Vec<Statement>,
     index: usize,
-    variables: HashMap<String, Primitive>,
+    variables: Env,
 }
 
 impl Interpreter {
@@ -52,9 +89,9 @@ impl Interpreter {
         arguments: Vec<String>,
         block: Statement,
     ) -> Primitive {
-        self.variables.insert(
+        self.variables.set(
             name,
-            Primitive::Function(block, arguments, self.variables.clone()),
+            Primitive::Function(block, arguments),
         );
 
         Primitive::None
@@ -80,14 +117,14 @@ impl Interpreter {
 
     /// `write <OP>;` statement evaluator
     fn s_eval_write(&mut self, value: &Op) -> Primitive {
-        print!("{}", self.evaluate(value));
+        eprint!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
     }
 
     /// `writeln <OP>;` statement evaluator
     fn s_eval_writeln(&mut self, value: &Op) -> Primitive {
-        println!("{}", self.evaluate(value));
+        eprintln!("{}", self.evaluate(value));
         stdout().flush().unwrap();
         Primitive::None
     }
@@ -96,11 +133,7 @@ impl Interpreter {
     fn s_eval_assign(&mut self, var: String, value: Statement) -> Primitive {
         let value = self.statement(value);
 
-        if self.variables.get(&var).is_some() {
-            crate::error!("TypeError"; "tried to reassign variable `{}`", var => 1)
-        }
-
-        self.variables.insert(var, value);
+        self.variables.set(var, value);
         Primitive::None
     }
 
@@ -114,12 +147,7 @@ impl Interpreter {
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
             Literal::Number(n) => Primitive::Number(n),
-            Literal::VarNormal(v) =>
-            (
-                *self.variables.get(&v).unwrap_or_else(
-                    || crate::error!("ReferenceError"; "acessing undefined variable {}", v => 1)
-                )
-            ).clone(),
+            Literal::VarNormal(v) => (self.variables.get(&v)).clone(),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
         }
@@ -166,17 +194,13 @@ impl Interpreter {
         match called {
             Op::Primary(p) => match *p {
                 #[allow(unused_parens)]
-                Literal::VarNormal(p) => match (
-                    self.variables.clone().get(&p).unwrap_or_else(
-                        || crate::error!("ReferenceError"; "tried to call undefined variable {}", p => 1)
-                    )
-                ) {
-                    Primitive::Function(block, args, _) => {
-                        let mut env = args.iter().enumerate().map(|(index, key)| {
+                Literal::VarNormal(p) => match self.variables.get(&p) {
+                    Primitive::Function(block, args) => {
+                        let env = args.iter().enumerate().map(|(index, key)| {
                             (key.to_string(), self.evaluate(&arguments.get(index).unwrap_or_else(|| crate::error!("CallError"; "Missing arguments for function call" => 1))))
                         }).collect::<HashMap<_, _>>();
 
-                        env.extend(self.variables.clone());
+                        let env = Env::new(env, Some(Rc::new(self.variables.clone())));
 
                         interpret(std::iter::once(block.clone()), Some(env))
                     }

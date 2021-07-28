@@ -1,10 +1,9 @@
 use super::Interpreter;
-use super::Primitive;
+use super::Env;
 use crate::frontend::Statement;
-use std::collections::HashMap;
 
 pub struct InterpreterDebug {
-    variables: HashMap<String, Primitive>,
+    variables: Env,
 }
 
 impl InterpreterDebug {
@@ -31,7 +30,7 @@ impl InterpreterDebug {
 
 impl Default for InterpreterDebug {
     fn default() -> Self {
-        let variables = HashMap::new();
+        let variables = Env::default();
 
         Self { variables }
     }

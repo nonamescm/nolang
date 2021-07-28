@@ -1,6 +1,6 @@
-use super::Statement;
+use super::{Statement};
 use crate::error;
-use std::{cmp, collections::HashMap, fmt, ops};
+use std::{cmp, fmt, ops};
 
 /// Nolang primitive types
 #[derive(Debug, Clone)]
@@ -8,7 +8,7 @@ pub enum Primitive {
     Number(f64),
     Str(String),
     Bool(bool),
-    Function(Statement, Vec<String>, HashMap<String, Primitive>),
+    Function(Statement, Vec<String>),
     None,
 }
 
