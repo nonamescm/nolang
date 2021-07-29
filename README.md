@@ -22,7 +22,7 @@ let x = 10;
 @ Power function
 
 let pow_by => (n, by)
-    if by == 1;
+    if by <= 1;
         n;
     else n*pow_by(n, by-1);
 end
