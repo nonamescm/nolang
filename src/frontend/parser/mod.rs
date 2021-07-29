@@ -10,7 +10,7 @@ pub use statement::Statement;
 /// Check if a token matches and panic if it doesn't, returns ()
 macro_rules! consume {
     ($current: expr, $( $tokens:pat )|+) => {{
-        let printable = format!("{:?}", [ $(stringify!($tokens)),+ ]).replace("\"", "")
+        let printable = format!("{:?}", [ $(stringify!($tokens).split("::").last().unwrap()),+ ]).replace("\"", "")
             .replace("[", "")
             .replace("]", "");
         if !matches!($current, $($tokens)|+) {
