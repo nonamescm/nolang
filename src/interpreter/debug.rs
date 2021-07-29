@@ -1,11 +1,11 @@
 use super::{Env, Interpreter};
 use crate::frontend::Statement;
 
-pub struct InterpreterDebug {
-    variables: Env,
+pub struct InterpreterDebug<'a> {
+    variables: Env<'a>,
 }
 
-impl InterpreterDebug {
+impl<'a> InterpreterDebug<'a> {
     pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement>) {
         let mut runtime = Interpreter {
             statements: operations.collect(),
@@ -27,7 +27,7 @@ impl InterpreterDebug {
     }
 }
 
-impl Default for InterpreterDebug {
+impl<'a> Default for InterpreterDebug<'a> {
     fn default() -> Self {
         let variables = Env::default();
 

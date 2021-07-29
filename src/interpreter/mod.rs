@@ -9,17 +9,16 @@ pub use interpret::interpret;
 use primitive::{IntoPrimitive, Primitive};
 use std::collections::HashMap;
 use std::io::{stdout, Write};
-use std::rc::Rc;
 
 use crate::frontend::{Literal, Op, Statement, Tokens as Tok};
 
 #[derive(Debug, Clone)]
-pub struct Env {
+pub struct Env<'a> {
     current: HashMap<String, Primitive>,
-    over: Option<Rc<Env>>,
+    over: Option<&'a Env<'a>>,
 }
 
-impl Default for Env {
+impl<'a> Default for Env<'a> {
     fn default() -> Self {
         let mut current = HashMap::new();
         current.insert(
@@ -47,8 +46,8 @@ impl Default for Env {
     }
 }
 
-impl Env {
-    fn new(current: HashMap<String, Primitive>, over: Option<Rc<Env>>) -> Self {
+impl<'a> Env<'a> {
+    fn new(current: HashMap<String, Primitive>, over: Option<&'a Env<'a>>) -> Self {
         Self { current, over }
     }
 
@@ -74,13 +73,13 @@ impl Env {
 }
 
 /// The Interpreter implementation
-struct Interpreter {
+struct Interpreter<'a> {
     statements: Vec<Statement>,
     index: usize,
-    variables: Env,
+    variables: Env<'a>,
 }
 
-impl Interpreter {
+impl<'a> Interpreter<'a> {
     /// Advance the index by one
     fn next(&mut self) -> bool {
         self.index += 1;
@@ -119,7 +118,7 @@ impl Interpreter {
 
     /// evaluator for the block `do <Statement>;* done`
     fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
-        interpret(statements.into_iter(), Some(self.variables.clone()))
+        interpret(statements.into_iter(), Some(&self.variables))
     }
 
     fn s_eval_if(&mut self, condition: &Op, block: Statement, else_block: Statement) -> Primitive {
@@ -141,14 +140,14 @@ impl Interpreter {
     /// Eval primary expressions, that are just the minimal possible expression
     #[rustfmt::skip]
     // I like some syntax on this function but rustfmt removes it
-    fn eval_primary(&mut self, prim: Literal) -> Primitive {
+    fn eval_primary(&mut self, prim: &Literal) -> Primitive {
         match prim {
-            Literal::Bool(b) => Primitive::Bool(b),
+            Literal::Bool(b) => Primitive::Bool(*b),
             Literal::None => Primitive::None,
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
-            Literal::Number(n) => Primitive::Number(n),
-            Literal::VarNormal(v) => self.variables.get(&v),
+            Literal::Number(n) => Primitive::Number(*n),
+            Literal::VarNormal(v) => self.variables.get(v),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
         }
@@ -184,7 +183,7 @@ impl Interpreter {
             Tok::LtOrEq => (self.evaluate(&right) <= self.evaluate(&left)).into_pri(),
 
             // Logical operators
-            Tok::And => self.evaluate(&right).and(&mut|| self.evaluate(&left)),
+            Tok::And => self.evaluate(&right).and(&mut || self.evaluate(&left)),
             Tok::Or => self.evaluate(&right).or(&mut || self.evaluate(&left)),
 
             // should not reach this since I've covered all binary operations
@@ -198,13 +197,16 @@ impl Interpreter {
                 #[allow(unused_parens)]
                 Literal::VarNormal(p) => match self.variables.get(&p) {
                     Primitive::Function(block, args) => {
-                        let env = args.iter().enumerate().map(|(index, key)| {
-                            (key.to_string(), self.evaluate(arguments.get(index).unwrap_or_else(|| crate::error!("CallError"; "Missing arguments for function call" => 1))))
-                        }).collect::<HashMap<_, _>>();
+                        let env = args.iter().enumerate().map(|(index, key)| (
+                            key.to_string(),
+                            self.evaluate(arguments.get(index).unwrap_or_else(
+                                || crate::error!("CallError"; "Missing arguments for function call" => 1)
+                            ))
+                        )).collect::<HashMap<_, _>>();
 
-                        let env = Env::new(env, Some(Rc::new(self.variables.clone())));
+                        let env = Env::new(env, Some(&self.variables));
 
-                        interpret(std::iter::once(block), Some(env))
+                        interpret(std::iter::once(block.clone()), Some(&env))
                     }
                     Primitive::NativeFunc(func) => {
                         if !matches!(arguments.len(), 1 | 0) {
@@ -223,7 +225,7 @@ impl Interpreter {
     /// Minimal wrapper that sends the Op to the correct evaluator
     fn evaluate(&mut self, operation: &Op) -> Primitive {
         match operation {
-            Op::Primary(ref value) => self.eval_primary(*value.clone()),
+            Op::Primary(ref value) => self.eval_primary(&**value),
             Op::Unary(ref op, ref right) => self.eval_unary(op, *right.clone()),
             Op::Binary(ref left, ref op, ref right) => {
                 self.eval_binary(*left.clone(), op, *right.clone())
