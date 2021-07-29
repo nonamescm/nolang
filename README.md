@@ -31,7 +31,7 @@ writeln(pow_by(2, 2));
 
 do
     let nome = "nolang";
-    writeln nome + "!!";
+    writeln(nome + "!!");
 done;
 ```
 
