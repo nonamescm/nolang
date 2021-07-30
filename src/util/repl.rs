@@ -33,12 +33,15 @@ pub fn repl(arguments: &[&str]) -> io::Result<()> {
         Some(&"-p") => loop {
             let input = print_read()?;
             println!("{:#?}", parse(input).collect::<Vec<_>>());
-        },
+        }
+
         Some(&"-l") => loop {
             let input = print_read()?;
             println!("{:#?}", lex(input).collect::<Vec<_>>())
-        },
+        }
+
         Some(e) => panic!("Unrecognized option `{}`", e),
+
         None => loop {
             let runtime = Mutex::new(InterpreterDebug::default());
 
@@ -46,14 +49,12 @@ pub fn repl(arguments: &[&str]) -> io::Result<()> {
                 let input = print_read()?;
 
                 if input.trim() != "" {
-                    catch_unwind(|| {
-                        runtime
-                            .lock()
-                            .unwrap()
-                            .interpret_debug(parse(input.to_string()))
-                    })
-                    .unwrap_or_default();
-                    let _ = std::panic::take_hook();
+                    drop(catch_unwind(|| {
+                        let mut runtime = runtime.lock().unwrap();
+                        runtime.interpret_debug(parse(input.to_string()))
+                    }));
+
+                    drop(std::panic::take_hook());
                 }
             }
         },
