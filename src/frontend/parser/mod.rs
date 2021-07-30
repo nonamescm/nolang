@@ -184,7 +184,7 @@ impl Parser {
                 self.next();
                 let operation = self.operation();
                 consume!(self, self.current, Tok::Rparen);
-                Literal::Operation(Op::Grouping(Box::new(operation)))
+                return Op::Grouping(Box::new(operation))
             }
 
             e => crate::error!("ParseError"; "Unexpected `{}` on line {}", e, self.line => 1),
