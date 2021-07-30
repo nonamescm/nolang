@@ -221,7 +221,7 @@ impl<'a> Interpreter<'a> {
         match called {
             Op::Primary(p) => match &**p {
                 #[allow(unused_parens)]
-                Literal::VarNormal(p) => match self.variables.get(&p) {
+                Literal::VarNormal(p) => match self.variables.get(p) {
                     Primitive::Function(block, args) => {
                         let env = args.iter().enumerate().map(|(index, key)| (
                             key.to_string(),
