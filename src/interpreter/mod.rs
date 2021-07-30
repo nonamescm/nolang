@@ -51,8 +51,8 @@ impl<'a> Default for Env<'a> {
             "typeof".to_string(),
             Primitive::NativeFunc(|arg: Primitive| {
                 Primitive::Str(match arg {
-                    Primitive::NativeFunc(..) | Primitive::Function(..) => "function",
-                    Primitive::None => "none",
+                    Primitive::NativeFunc(..) | Primitive::Function(..) => "Function",
+                    Primitive::None => "None",
                     Primitive::Int(..) => "Int",
                     Primitive::BigInt(..) => "BigInt",
                     Primitive::Float(..) => "Float",
