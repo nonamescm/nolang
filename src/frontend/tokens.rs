@@ -6,7 +6,9 @@ pub enum Tokens {
 
     // value fields
     Ident(String), // identifier, like: let main = 1
-    Number(f64),   // number
+    Int(i32),
+    Float(f64),
+    BigInt(i128),
     Str(String),
 
     // reserved keywords
@@ -83,7 +85,9 @@ impl std::fmt::Display for Tokens {
                 Percent => s("%"),
 
                 Ident(ref l) => l.to_string(),
-                Number(n) => n.to_string(),
+                Float(ref f) => f.to_string(),
+                Int(ref i) => i.to_string(),
+                BigInt(ref bi) => bi.to_string(),
                 Str(ref s) => s.to_string(),
 
                 True => s("true"),
@@ -126,7 +130,9 @@ impl Tokens {
     pub fn is_literal(&self) -> bool {
         matches!(
             *self,
-            Self::Number(..)
+            Self::Int(..)
+                | Self::BigInt(..)
+                | Self::Float(..)
                 | Self::Str(..)
                 | Self::True
                 | Self::False

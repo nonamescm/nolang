@@ -39,6 +39,29 @@ impl<'a> Default for Env<'a> {
             })
         );
 
+        current.insert(
+            "__print_typeof".to_string(),
+            Primitive::NativeFunc(|arg: Primitive| {
+                println!("{:?}", arg);
+                Primitive::None
+            })
+        );
+
+        current.insert(
+            "typeof".to_string(),
+            Primitive::NativeFunc(|arg: Primitive| {
+                Primitive::Str(match arg {
+                    Primitive::NativeFunc(..) | Primitive::Function(..) => "function",
+                    Primitive::None => "none",
+                    Primitive::Int(..) => "Int",
+                    Primitive::BigInt(..) => "BigInt",
+                    Primitive::Float(..) => "Float",
+                    Primitive::Bool(..) => "Bool",
+                    Primitive::Str(..) => "Str"
+                }.to_string()
+            )})
+        );
+
         Self {
             current,
             over: None,
@@ -146,7 +169,9 @@ impl<'a> Interpreter<'a> {
             Literal::None => Primitive::None,
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
-            Literal::Number(n) => Primitive::Number(*n),
+            Literal::Float(n) => Primitive::Float(*n),
+            Literal::BigInt(n) => Primitive::BigInt(*n),
+            Literal::Int(n) => Primitive::Int(*n),
             Literal::VarNormal(v) => self.variables.get(v),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
@@ -156,7 +181,7 @@ impl<'a> Interpreter<'a> {
     /// Unary expression evaluator
     fn eval_unary(&mut self, op: &Tok, right: Literal) -> Primitive {
         match op {
-            Tok::Minus => Primitive::Number(-self.evaluate(&Op::Primary(Box::new(right)))),
+            Tok::Minus => -self.evaluate(&Op::Primary(Box::new(right))),
             Tok::Not => Primitive::Bool(!self.evaluate(&Op::Primary(Box::new(right)))),
             _ => unreachable!(),
         }
@@ -167,10 +192,10 @@ impl<'a> Interpreter<'a> {
         match op {
             // operations
             Tok::Plus => self.evaluate(&right) + self.evaluate(&left),
-            Tok::Minus => (self.evaluate(&right) - self.evaluate(&left)).into_pri(),
-            Tok::Asterisk => (self.evaluate(&right) * self.evaluate(&left)).into_pri(),
-            Tok::Slash => (self.evaluate(&right) / self.evaluate(&left)).into_pri(),
-            Tok::Percent => (self.evaluate(&right) % self.evaluate(&left)).into_pri(),
+            Tok::Minus => self.evaluate(&right) - self.evaluate(&left),
+            Tok::Asterisk => self.evaluate(&right) * self.evaluate(&left),
+            Tok::Slash => self.evaluate(&right) / self.evaluate(&left),
+            Tok::Percent => self.evaluate(&right) % self.evaluate(&left),
 
             // Comparisons
             Tok::Comp => (self.evaluate(&right) == self.evaluate(&left)).into_pri(),
@@ -206,7 +231,7 @@ impl<'a> Interpreter<'a> {
 
                         let env = Env::new(env, Some(&self.variables));
 
-                        interpret(std::iter::once(block.clone()), Some(&env))
+                        interpret(std::iter::once(block), Some(&env))
                     }
                     Primitive::NativeFunc(func) => {
                         if !matches!(arguments.len(), 1 | 0) {

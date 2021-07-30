@@ -177,7 +177,9 @@ impl Parser {
             Tok::True => Literal::Bool(true),
             Tok::False => Literal::Bool(false),
             Tok::None => Literal::None,
-            Tok::Number(n) => Literal::Number(*n),
+            Tok::Float(n) => Literal::Float(*n),
+            Tok::Int(n) => Literal::Int(*n),
+            Tok::BigInt(n) => Literal::BigInt(*n),
             Tok::Str(s) => Literal::String(s.to_string()),
             Tok::Ident(id) => Literal::VarNormal(id.to_string()),
             Tok::Lparen => {

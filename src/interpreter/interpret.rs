@@ -3,7 +3,7 @@ use crate::frontend::Statement;
 use std::collections::HashMap;
 
 /// Wrapper interpreter function
-pub fn interpret<'a>(operations: impl Iterator<Item = Statement>, vars: Option<&Env>) -> Primitive {
+pub fn interpret(operations: impl Iterator<Item = Statement>, vars: Option<&Env>) -> Primitive {
     let mut runtime = match vars {
         Some(v) => Interpreter {
             statements: operations.collect(),

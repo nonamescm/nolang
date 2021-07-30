@@ -135,10 +135,17 @@ impl Lexer {
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; is_valid_math_symbol(&self.ch) => num);
 
-                let val = num
-                    .parse::<f64>()
-                    .unwrap_or_else(|_| crate::error!("LexerError"; "error parsing number at line {}", self.line => 1));
-                Tok::Number(val)
+                match num.parse::<i32>() {
+                    Ok(n) => Tok::Int(n),
+                    Err(..) => {
+                        match num.parse::<f64>() {
+                            Ok(n) => Tok::Float(n),
+                            Err(..) => Tok::BigInt(num.parse::<i128>().unwrap_or_else(
+                                |_| crate::error!("LexerError"; "can't parse number {} at line {}", num, self.line => 1)
+                            ))
+                        }
+                    }
+                }
             }
             c if is_ch_valid(&c) => {
                 get_val!(self; is_ch_valid(&self.ch) => ident);
