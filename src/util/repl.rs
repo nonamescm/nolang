@@ -33,12 +33,12 @@ pub fn repl(arguments: &[&str]) -> io::Result<()> {
         Some(&"-p") => loop {
             let input = print_read()?;
             println!("{:#?}", parse(input).collect::<Vec<_>>());
-        }
+        },
 
         Some(&"-l") => loop {
             let input = print_read()?;
             println!("{:#?}", lex(input).collect::<Vec<_>>())
-        }
+        },
 
         Some(e) => panic!("Unrecognized option `{}`", e),
 

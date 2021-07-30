@@ -30,7 +30,7 @@ impl fmt::Display for Primitive {
             Self::BigInt(ref n) => n.to_string(),
             Self::Int(ref n) => n.to_string(),
             Self::Function(..) => "<function>".to_string(),
-            Self::NativeFunc(..) => "<native function>".to_string()
+            Self::NativeFunc(..) => "<native function>".to_string(),
         };
         write!(f, "{}", raw)
     }
@@ -69,8 +69,8 @@ impl ops::Add for Primitive {
         match (&rhs, &self) {
             (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_add(*s_num) {
                 Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 + *s_num as i128)
-            }
+                None => Self::BigInt(*o_num as i128 + *s_num as i128),
+            },
 
             (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num + s_num),
             (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 + s_num),
@@ -94,8 +94,8 @@ impl ops::Sub for Primitive {
         match (&rhs, &self) {
             (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_sub(*s_num) {
                 Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 - *s_num as i128)
-            }
+                None => Self::BigInt(*o_num as i128 - *s_num as i128),
+            },
 
             (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num - s_num),
             (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 - s_num),
@@ -117,8 +117,8 @@ impl ops::Mul for Primitive {
         match (&rhs, &self) {
             (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_mul(*s_num) {
                 Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 * *s_num as i128)
-            }
+                None => Self::BigInt(*o_num as i128 * *s_num as i128),
+            },
 
             (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num * s_num),
             (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 * s_num),
@@ -140,8 +140,8 @@ impl ops::Div for Primitive {
         match (&rhs, &self) {
             (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_div(*s_num) {
                 Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 / *s_num as i128)
-            }
+                None => Self::BigInt(*o_num as i128 / *s_num as i128),
+            },
 
             (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num * s_num),
             (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 * s_num),

@@ -27,7 +27,7 @@ impl<'a> Default for Env<'a> {
                 println!("{}", arg);
                 stdout().flush().expect("Error writing line");
                 Primitive::None
-            })
+            }),
         );
 
         current.insert(
@@ -36,7 +36,7 @@ impl<'a> Default for Env<'a> {
                 println!("{}", arg);
                 stdout().flush().expect("Error writing line");
                 Primitive::None
-            })
+            }),
         );
 
         current.insert(
@@ -44,22 +44,25 @@ impl<'a> Default for Env<'a> {
             Primitive::NativeFunc(|arg: Primitive| {
                 println!("{:?}", arg);
                 Primitive::None
-            })
+            }),
         );
 
         current.insert(
             "typeof".to_string(),
             Primitive::NativeFunc(|arg: Primitive| {
-                Primitive::Str(match arg {
-                    Primitive::NativeFunc(..) | Primitive::Function(..) => "Function",
-                    Primitive::None => "None",
-                    Primitive::Int(..) => "Int",
-                    Primitive::BigInt(..) => "BigInt",
-                    Primitive::Float(..) => "Float",
-                    Primitive::Bool(..) => "Bool",
-                    Primitive::Str(..) => "Str"
-                }.to_string()
-            )})
+                Primitive::Str(
+                    match arg {
+                        Primitive::NativeFunc(..) | Primitive::Function(..) => "Function",
+                        Primitive::None => "None",
+                        Primitive::Int(..) => "Int",
+                        Primitive::BigInt(..) => "BigInt",
+                        Primitive::Float(..) => "Float",
+                        Primitive::Bool(..) => "Bool",
+                        Primitive::Str(..) => "Str",
+                    }
+                    .to_string(),
+                )
+            }),
         );
 
         Self {
@@ -254,9 +257,7 @@ impl<'a> Interpreter<'a> {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
             Op::Grouping(ref op) => self.evaluate(op),
-            Op::Call(ref called, ref arguments) => {
-                self.eval_call(&*called, arguments.clone())
-            }
+            Op::Call(ref called, ref arguments) => self.eval_call(&*called, arguments.clone()),
 
             #[allow(unreachable_patterns)]
             // for when I add a new Operation and want to test the parser before going to the
