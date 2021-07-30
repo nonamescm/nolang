@@ -33,7 +33,7 @@ impl<'a> Default for Env<'a> {
         current.insert(
             "write".to_string(),
             Primitive::NativeFunc(|arg: Primitive| {
-                println!("{}", arg);
+                print!("{}", arg);
                 stdout().flush().expect("Error writing line");
                 Primitive::None
             }),
