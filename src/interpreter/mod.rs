@@ -161,8 +161,6 @@ impl<'a> Interpreter<'a> {
     }
 
     /// Eval primary expressions, that are just the minimal possible expression
-    #[rustfmt::skip]
-    // I like some syntax on this function but rustfmt removes it
     fn eval_primary(&mut self, prim: &Literal) -> Primitive {
         match prim {
             Literal::Bool(b) => Primitive::Bool(*b),
@@ -216,9 +214,9 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    fn eval_call(&mut self, called: Op, arguments: Vec<Op>) -> Primitive {
+    fn eval_call(&mut self, called: &Op, arguments: Vec<Op>) -> Primitive {
         match called {
-            Op::Primary(p) => match *p {
+            Op::Primary(p) => match &**p {
                 #[allow(unused_parens)]
                 Literal::VarNormal(p) => match self.variables.get(&p) {
                     Primitive::Function(block, args) => {
@@ -255,9 +253,9 @@ impl<'a> Interpreter<'a> {
             Op::Binary(ref left, ref op, ref right) => {
                 self.eval_binary(*left.clone(), op, *right.clone())
             }
-            Op::Grouping(ref op) => self.evaluate(&*op.clone()),
+            Op::Grouping(ref op) => self.evaluate(op),
             Op::Call(ref called, ref arguments) => {
-                self.eval_call(*called.clone(), arguments.clone())
+                self.eval_call(&*called, arguments.clone())
             }
 
             #[allow(unreachable_patterns)]
