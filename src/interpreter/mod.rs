@@ -244,6 +244,23 @@ impl<'a> Interpreter<'a> {
                 },
                 _ => unreachable!(),
             },
+            Op::Call(called, args) => {
+                match self.eval_call(called, args.to_vec()) {
+                    Primitive::Function(block, f_args) => {
+                        let env = f_args.iter().enumerate().map(|(index, key)| (
+                            key.to_string(),
+                            self.evaluate(arguments.get(index).unwrap_or_else(
+                                || crate::error!("CallError"; "Missing arguments for function call" => 1)
+                            ))
+                        )).collect::<HashMap<_, _>>();
+
+                        let env = Env::new(env, Some(&self.variables));
+
+                        interpret(std::iter::once(block), Some(&env))
+                    }
+                    e => crate::error!("CallError"; "can't call value {}", e => 1)
+                }
+            }
             _ => unreachable!(),
         }
     }
