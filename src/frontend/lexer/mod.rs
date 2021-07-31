@@ -128,7 +128,7 @@ impl Lexer {
             '\'' | '"' => {
                 let ch = self.ch;
                 self.next();
-                get_val!(self; ch != self.ch => str_vec);
+                get_str!(self; ch != self.ch => str_vec);
                 self.next();
                 Tok::Str(str_vec)
             }
@@ -137,13 +137,11 @@ impl Lexer {
 
                 match num.parse::<i32>() {
                     Ok(n) => Tok::Int(n),
-                    Err(..) => {
-                        match num.parse::<f64>() {
-                            Ok(n) => Tok::Float(n),
-                            Err(..) => Tok::BigInt(num.parse::<i128>().unwrap_or_else(
-                                |_| crate::error!("LexerError"; "can't parse number {} at line {}", num, self.line => 1)
-                            ))
-                        }
+                    Err(..) => match num.parse::<f64>() {
+                        Ok(n) => Tok::Float(n),
+                        Err(..) => Tok::BigInt(num.parse::<i128>().unwrap_or_else(
+                            |_| crate::error!("LexerError"; "can't parse number {} at line {}", num, self.line => 1)
+                        ))
                     }
                 }
             }
