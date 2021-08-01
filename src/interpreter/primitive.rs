@@ -143,13 +143,13 @@ impl ops::Div for Primitive {
                 None => Self::BigInt(*o_num as i128 / *s_num as i128),
             },
 
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num * s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 * s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num * *s_num as i128),
+            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num / s_num),
+            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 / s_num),
+            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num / *s_num as i128),
 
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num * s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 * s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num * *s_num as f64),
+            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num / s_num),
+            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 / s_num),
+            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num / *s_num as f64),
             _ => error!("TypeError"; "tried to use `/` operator between {} and {}", rhs, self => 1),
         }
     }
@@ -161,15 +161,15 @@ impl ops::Rem for Primitive {
     #[inline]
     fn rem(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num * s_num),
+            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num % s_num),
 
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num * s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 * s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num * *s_num as i128),
+            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num % s_num),
+            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 % s_num),
+            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num % *s_num as i128),
 
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num * s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 * s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num * *s_num as f64),
+            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num % s_num),
+            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 % s_num),
+            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num % *s_num as f64),
             _ => error!("TypeError"; "tried to use `%` operator between {} and {}", rhs, self => 1),
         }
     }
