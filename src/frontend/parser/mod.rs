@@ -74,6 +74,7 @@ impl Parser {
             Tok::Let => self.assign_stat(),
             Tok::Do => self.block_stat(),
             Tok::If => self.if_stat(),
+            Tok::Defn => self.defn_stat(),
             _ => {
                 let x = Statement::Op(self.operation());
                 consume!(self, self.current, Tok::Semicolon);
@@ -110,18 +111,47 @@ impl Parser {
         let mut vec_stat = vec![];
         self.next();
 
-        while !matches!(self.current, Tok::Done) {
+        while !matches!(self.current, Tok::End) {
             vec_stat.push(self.statement());
 
             if matches!(self.current, Tok::Eof) {
                 crate::error!("ParseError"; "unclosed do block opened on line {}", line => 1)
             }
         }
-        consume!(self, self.current, Tok::Done);
-
+        consume!(self, self.current, Tok::End);
         consume!(self, self.current, Tok::Semicolon);
 
         Statement::Block(vec_stat)
+    }
+
+    fn defn_stat(&mut self) -> Statement {
+        self.next();
+        consume!(self, self.current, Tok::Lparen);
+
+        let mut arguments = Vec::new();
+
+        while !matches!(self.current, Tok::Rparen) {
+            arguments.push(match &self.current {
+                Tok::Ident(id) => id.to_string(),
+                _ => crate::error!("ParseError"; "Expected variable name after function on line {}", self.line => 1),
+            });
+            self.next();
+
+            if !matches!(self.current, Tok::Rparen) {
+                consume!(self, self.current, Tok::Comma);
+            }
+        }
+        consume!(self, self.current, Tok::Rparen);
+
+        let name = match &self.current {
+            Tok::Ident(id) => id.to_string(),
+            e => crate::error!("ParseError"; "expected ident after function declaration, found {}, on line {}", e, self.line => 1)
+        };
+        self.next();
+        consume!(self, self.current, Tok::Assign);
+        let block = Box::new(self.statement());
+
+        Statement::FuncAssign(name, arguments, block)
     }
 
     fn assign_stat(&mut self) -> Statement {
@@ -139,28 +169,6 @@ impl Parser {
             let value = self.statement();
 
             Statement::Assign(var_name, Box::new(value))
-        } else if consume!(self, self.current, Tok::ArrowAssign) {
-            consume!(self, self.current, Tok::Lparen);
-
-            let mut arguments = Vec::new();
-
-            while !matches!(self.current, Tok::Rparen) {
-                arguments.push(match &self.current {
-                    Tok::Ident(id) => id.to_string(),
-                    _ => crate::error!("ParseError"; "Expected variable name after function on line {}", self.line => 1),
-                });
-                self.next();
-
-                if !matches!(self.current, Tok::Rparen) {
-                    consume!(self, self.current, Tok::Comma);
-                }
-            }
-            self.next();
-            let block = Box::new(self.statement());
-
-            consume!(self, self.current, Tok::End);
-
-            Statement::FuncAssign(var_name, arguments, block)
         } else {
             unreachable!()
         }

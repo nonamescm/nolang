@@ -16,12 +16,12 @@ pub enum Tokens {
     False,
     None, // Null value
     Let,  // declare function/variable
+    Defn,
     Do,
     If,
     Elif,
     Else,
     Then,
-    Done,
     End, // `;;`
     Or,
     Not,
@@ -96,8 +96,8 @@ impl std::fmt::Display for Tokens {
                 None => s("none"),
 
                 Let => s("let"),
+                Defn => s("defn"),
                 Do => s("do"),
-                Done => s("done"),
                 End => s(";;"),
 
                 If => s("if"),
@@ -160,12 +160,12 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
     match k {
         "not" => Some(Tokens::Not),
         "let" => Some(Tokens::Let),
+        "defn" => Some(Tokens::Defn),
         "if" => Some(Tokens::If),
         "elif" => Some(Tokens::Elif),
         "else" => Some(Tokens::Else),
         "then" => Some(Tokens::Then),
         "do" => Some(Tokens::Do),
-        "done" => Some(Tokens::Done),
         "true" => Some(Tokens::True),
         "false" => Some(Tokens::False),
         "none" => Some(Tokens::None),
