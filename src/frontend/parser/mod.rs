@@ -87,7 +87,7 @@ impl Parser {
         let line = self.line;
         self.next(); // skips the current `if` toke
         let condition = self.operation();
-        consume!(self, self.current, Tok::Semicolon);
+        consume!(self, self.current, Tok::Then);
         let body = self.statement();
 
         if matches!(body, Statement::Assign(..)) {

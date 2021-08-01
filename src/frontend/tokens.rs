@@ -20,6 +20,7 @@ pub enum Tokens {
     If,
     Elif,
     Else,
+    Then,
     Done,
     End, // `;;`
     Or,
@@ -102,6 +103,7 @@ impl std::fmt::Display for Tokens {
                 If => s("if"),
                 Elif => s("elif"),
                 Else => s("else"),
+                Then => s("then"),
 
                 Or => s("or"),
                 And => s("and"),
@@ -161,6 +163,7 @@ pub fn keyword_get_tok(k: &str) -> Option<Tokens> {
         "if" => Some(Tokens::If),
         "elif" => Some(Tokens::Elif),
         "else" => Some(Tokens::Else),
+        "then" => Some(Tokens::Then),
         "do" => Some(Tokens::Do),
         "done" => Some(Tokens::Done),
         "true" => Some(Tokens::True),
