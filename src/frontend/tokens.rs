@@ -39,7 +39,6 @@ pub enum Tokens {
     Rbrace,
     Lbrace,
     Assign,      // `=`
-    ArrowAssign, // `=>`
     Comp,        // `==`
     Different,   // `~=` or `!=` in other languages
     Gt,          // `>`
@@ -64,7 +63,6 @@ impl std::fmt::Display for Tokens {
                 Lt => s("<"),
                 GtOrEq => s(">="),
                 LtOrEq => s("<="),
-                ArrowAssign => s("=>"),
                 Comp => s("=="),
                 Different => s("~="),
                 Assign => s("="),

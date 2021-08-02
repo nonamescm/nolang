@@ -94,10 +94,6 @@ impl Lexer {
                 self.next();
                 Tok::Comp
             }
-            '=' if self.peek('>') => {
-                self.next();
-                Tok::ArrowAssign
-            }
             '=' => Tok::Assign,
 
             '~' if self.peek('=') => {
