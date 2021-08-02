@@ -60,33 +60,44 @@ impl Parser {
         if (self.index as usize) < self.tokens.len() {
             if self.tokens[self.index as usize] == Tok::Newline {
                 self.line += 1;
-                self.next()
-            } else {
-                self.current = self.tokens[self.index as usize].clone()
             }
+            self.current = self.tokens[self.index as usize].clone()
         } else {
             self.current = Tok::Eof
         }
     }
 
+    fn next_skip(&mut self) {
+        loop {
+            self.next();
+            if !matches!(self.current, Tok::Newline) {
+                break;
+            }
+        }
+    }
+
     fn statement(&mut self) -> Statement {
-        let operation = match self.current {
+        while matches!(self.current, Tok::Newline | Tok::Semicolon) {
+            self.next()
+        }
+        match self.current {
             Tok::Let => self.assign_stat(),
             Tok::Do => self.block_stat(),
             Tok::If => self.if_stat(),
             Tok::Defn => self.defn_stat(),
             _ => {
                 let x = Statement::Op(self.operation());
-                consume!(self, self.current, Tok::Semicolon);
+                self.index -= 1;
+                self.current = Tok::Semicolon;
+                consume!(self, self.current, Tok::Semicolon | Tok::Newline | Tok::Eof);
                 x
             }
-        };
-        operation
+        }
     }
 
     fn if_stat(&mut self) -> Statement {
         let line = self.line;
-        self.next(); // skips the current `if` toke
+        self.next_skip(); // skips the current `if` toke
         let condition = self.operation();
         consume!(self, self.current, Tok::Then);
         let body = self.statement();
@@ -97,7 +108,7 @@ impl Parser {
 
         match self.current {
             Tok::Else => {
-                self.next();
+                self.next_skip();
                 let else_body = self.statement();
                 Statement::If(condition, Box::new(body), Box::new(else_body))
             }
@@ -109,7 +120,7 @@ impl Parser {
     fn block_stat(&mut self) -> Statement {
         let line = self.line;
         let mut vec_stat = vec![];
-        self.next();
+        self.next_skip();
 
         while !matches!(self.current, Tok::End) {
             vec_stat.push(self.statement());
@@ -119,13 +130,13 @@ impl Parser {
             }
         }
         consume!(self, self.current, Tok::End);
-        consume!(self, self.current, Tok::Semicolon);
+        consume!(self, self.current, Tok::Semicolon | Tok::Newline | Tok::Eof);
 
         Statement::Block(vec_stat)
     }
 
     fn defn_stat(&mut self) -> Statement {
-        self.next();
+        consume!(self, self.current, Tok::Defn);
         consume!(self, self.current, Tok::Lparen);
 
         let mut arguments = Vec::new();
@@ -135,7 +146,7 @@ impl Parser {
                 Tok::Ident(id) => id.to_string(),
                 _ => crate::error!("ParseError"; "Expected variable name after function on line {}", self.line => 1),
             });
-            self.next();
+            self.next_skip();
 
             if !matches!(self.current, Tok::Rparen) {
                 consume!(self, self.current, Tok::Comma);
@@ -147,7 +158,7 @@ impl Parser {
             Tok::Ident(id) => id.to_string(),
             e => crate::error!("ParseError"; "expected ident after function declaration, found {}, on line {}", e, self.line => 1)
         };
-        self.next();
+        self.next_skip();
         consume!(self, self.current, Tok::Assign);
         let block = Box::new(self.statement());
 
@@ -155,14 +166,14 @@ impl Parser {
     }
 
     fn assign_stat(&mut self) -> Statement {
-        self.next();
+        self.next_skip();
         consume!(self.current, Tok::Ident(..));
 
         let var_name = match &self.current {
             Tok::Ident(id) => id.to_string(),
             _ => unreachable!(),
         };
-        self.next();
+        self.next_skip();
 
         if matches!(self.current, Tok::Assign) {
             consume!(self, self.current, Tok::Assign);
@@ -181,6 +192,9 @@ impl Parser {
 
     /// Get raw operations
     fn primary_op(&mut self) -> Op {
+        while matches!(self.current, Tok::Newline | Tok::Semicolon) {
+            self.next()
+        }
         let literal: Literal = match &self.current {
             Tok::True => Literal::Bool(true),
             Tok::False => Literal::Bool(false),
@@ -191,7 +205,7 @@ impl Parser {
             Tok::Str(s) => Literal::String(s.to_string()),
             Tok::Ident(id) => Literal::VarNormal(id.to_string()),
             Tok::Lparen => {
-                self.next();
+                self.next_skip();
                 let operation = self.operation();
                 consume!(self, self.current, Tok::Rparen);
                 return Op::Grouping(Box::new(operation));
@@ -199,7 +213,7 @@ impl Parser {
 
             e => crate::error!("ParseError"; "Unexpected `{}` on line {}", e, self.line => 1),
         };
-        self.next();
+        self.next_skip();
         Op::Primary(Box::new(literal))
     }
 
@@ -207,7 +221,7 @@ impl Parser {
         let mut called = self.primary_op();
 
         while matches!(self.current, Tok::Lparen) {
-            self.next();
+            self.next_skip();
 
             let mut arguments = Vec::new();
             while !matches!(self.current, Tok::Rparen) {
@@ -219,7 +233,7 @@ impl Parser {
 
                 consume!(self, self.current, Tok::Comma);
             }
-            self.next();
+            self.next_skip();
             match called {
                 Op::Primary(ref p) => match **p {
                     Literal::VarNormal(..) => (),
@@ -237,7 +251,7 @@ impl Parser {
     fn unary_op(&mut self) -> Op {
         if matches!(self.current, Tok::Minus | Tok::Not) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.call_op();
             Op::Unary(operator, Box::new(Literal::Operation(right)))
         } else {
@@ -251,7 +265,7 @@ impl Parser {
 
         while matches!(self.current, Tok::Asterisk | Tok::Slash | Tok::Percent) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.unary_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
@@ -265,7 +279,7 @@ impl Parser {
 
         while matches!(self.current, Tok::Plus | Tok::Minus) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.factor_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
@@ -279,7 +293,7 @@ impl Parser {
 
         while matches!(self.current, Tok::And) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.factor_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
@@ -293,7 +307,7 @@ impl Parser {
 
         while matches!(self.current, Tok::Or) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.and_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
@@ -307,7 +321,7 @@ impl Parser {
 
         while matches!(self.current, Tok::Gt | Tok::GtOrEq | Tok::Lt | Tok::LtOrEq) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.or_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
@@ -320,7 +334,7 @@ impl Parser {
 
         while matches!(self.current, Tok::Comp | Tok::Different) {
             let operator = self.current.clone();
-            self.next();
+            self.next_skip();
             let right = self.term_op();
 
             left = Op::Binary(Box::new(left), operator, Box::new(right))
