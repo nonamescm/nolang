@@ -3,24 +3,20 @@ use crate::frontend::Statement;
 use std::collections::HashMap;
 
 /// Wrapper interpreter function
-pub fn interpret(operations: impl Iterator<Item = Statement>, vars: Option<&Env>) -> Primitive {
+pub fn interpret(mut operations: impl Iterator<Item = Statement>, vars: Option<&Env>) -> Primitive {
     let mut runtime = match vars {
         Some(v) => Interpreter {
-            statements: operations.collect(),
-            index: 0,
             variables: Env::new(HashMap::new(), Some(v)),
         },
         None => Interpreter {
-            statements: operations.collect(),
-            index: 0,
             variables: Env::default(),
         },
     };
 
-    loop {
-        let current = runtime.statement(runtime.statements[runtime.index].clone());
-        if !runtime.next() {
-            break current;
-        }
+    let mut current = Primitive::None;
+
+    while let Some(op) = operations.next() {
+        current = runtime.statement(op);
     }
+    current
 }

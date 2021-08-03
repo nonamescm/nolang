@@ -100,19 +100,10 @@ impl<'a> Env<'a> {
 
 /// The Interpreter implementation
 struct Interpreter<'a> {
-    statements: Vec<Statement>,
-    index: usize,
     variables: Env<'a>,
 }
 
 impl<'a> Interpreter<'a> {
-    /// Advance the index by one
-    fn next(&mut self) -> bool {
-        self.index += 1;
-
-        self.index < self.statements.len()
-    }
-
     /// check what's the current statement and send it for the correct evaluator
     fn statement(&mut self, statement: Statement) -> Primitive {
         match statement {

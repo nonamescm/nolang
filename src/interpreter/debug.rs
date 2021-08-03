@@ -6,21 +6,13 @@ pub struct InterpreterDebug<'a> {
 }
 
 impl<'a> InterpreterDebug<'a> {
-    pub fn interpret_debug(&mut self, operations: impl Iterator<Item = Statement>) {
+    pub fn interpret_debug(&mut self, mut operations: impl Iterator<Item = Statement>) {
         let mut runtime = Interpreter {
-            statements: operations.collect(),
-            index: 0,
             variables: self.variables.clone(),
         };
 
-        loop {
-            println!(
-                "=> {}",
-                runtime.statement(runtime.statements[runtime.index].clone())
-            );
-            if !runtime.next() {
-                break;
-            }
+        while let Some(op) = operations.next() {
+            println!("=> {}", runtime.statement(op));
         }
 
         self.variables = runtime.variables
