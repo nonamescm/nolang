@@ -14,24 +14,24 @@
 
 <p>all existing structures for now</p>
 
-```elixir
+```rust
 @ variable
-let x = 10;
+let x = 10
 
 
 @ Power function
 
 defn(n, by) pow_by =
     if by <= 1 then
-        n;
-    else n*pow_by(n, by-1);
+        n
+    else n*pow_by(n, by-1)
 
-writeln(pow_by(2, 2));
+writeln(pow_by(2, 2))
 
 do
-    let nome = "nolang";
-    writeln(nome + "!!");
-end;
+    let nome = "nolang"
+    writeln(nome + "!!")
+end
 ```
 
 <h3>TODO</h3>
