@@ -54,8 +54,7 @@ impl<'a> Default for Env<'a> {
                     match arg {
                         Primitive::NativeFunc(..) | Primitive::Function(..) => "Function",
                         Primitive::None => "None",
-                        Primitive::Int(..) => "Int",
-                        Primitive::Float(..) => "Float",
+                        Primitive::Num(..) => "Num",
                         Primitive::Bool(..) => "Bool",
                         Primitive::Str(..) => "Str",
                     }
@@ -160,8 +159,7 @@ impl<'a> Interpreter<'a> {
             Literal::None => Primitive::None,
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
-            Literal::Float(n) => Primitive::Float(*n),
-            Literal::Int(n) => Primitive::Int(*n),
+            Literal::Num(n) => Primitive::Num(*n),
             Literal::VarNormal(v) => self.variables.get(v),
             #[allow(unreachable_patterns)]
             _ => todo!(), // for when I add a new primary operator to the parser
@@ -181,22 +179,23 @@ impl<'a> Interpreter<'a> {
     fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
         match op {
             // operations
-            Tok::Plus => self.evaluate(&left) + self.evaluate(&right),
-            Tok::Minus => self.evaluate(&left) - self.evaluate(&right),
-            Tok::Asterisk => self.evaluate(&left) * self.evaluate(&right),
-            Tok::Slash => self.evaluate(&left) / self.evaluate(&right),
-            Tok::Percent => self.evaluate(&left) % self.evaluate(&right),
+            Tok::Plus => self.evaluate(&right) + self.evaluate(&left),
+            Tok::Minus => self.evaluate(&right) - self.evaluate(&left),
+            Tok::Asterisk => self.evaluate(&right) * self.evaluate(&left),
+            Tok::Slash => self.evaluate(&right) / self.evaluate(&left),
+            Tok::Percent => self.evaluate(&right) % self.evaluate(&left),
+
             Tok::Pow => self.evaluate(&left).pow(self.evaluate(&right)),
 
             // Comparisons
-            Tok::Comp => (self.evaluate(&left) == self.evaluate(&right)).into_pri(),
-            Tok::Different => (self.evaluate(&left) != self.evaluate(&right)).into_pri(),
+            Tok::Comp => (self.evaluate(&right) == self.evaluate(&left)).into_pri(),
+            Tok::Different => (self.evaluate(&right) != self.evaluate(&left)).into_pri(),
 
-            Tok::Gt => (self.evaluate(&left) > self.evaluate(&right)).into_pri(),
-            Tok::GtOrEq => (self.evaluate(&left) >= self.evaluate(&right)).into_pri(),
+            Tok::Gt => (self.evaluate(&right) > self.evaluate(&left)).into_pri(),
+            Tok::GtOrEq => (self.evaluate(&right) >= self.evaluate(&left)).into_pri(),
 
-            Tok::Lt => (self.evaluate(&left) < self.evaluate(&right)).into_pri(),
-            Tok::LtOrEq => (self.evaluate(&left) <= self.evaluate(&right)).into_pri(),
+            Tok::Lt => (self.evaluate(&right) < self.evaluate(&left)).into_pri(),
+            Tok::LtOrEq => (self.evaluate(&right) <= self.evaluate(&left)).into_pri(),
 
             // Logical operators
             Tok::And => self.evaluate(&left).and(&mut || self.evaluate(&right)),

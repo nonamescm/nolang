@@ -5,8 +5,7 @@ use std::{cmp, fmt, ops};
 /// Nolang primitive types
 #[derive(Debug, Clone)]
 pub enum Primitive {
-    Int(i64),
-    Float(f64),
+    Num(f64),
     Str(String),
     Bool(bool),
     Function(Statement, Vec<String>),
@@ -25,8 +24,7 @@ impl fmt::Display for Primitive {
             Self::Bool(false) => "false".to_string(),
             Self::None => "none".to_string(),
             Self::Str(s) => s.to_string(),
-            Self::Float(ref n) => n.to_string(),
-            Self::Int(ref n) => n.to_string(),
+            Self::Num(ref n) => n.to_string(),
             Self::Function(..) => "<function>".to_string(),
             Self::NativeFunc(..) => "<native function>".to_string(),
         };
@@ -49,10 +47,7 @@ impl ops::Neg for Primitive {
     #[inline]
     fn neg(self) -> Self::Output {
         match self {
-            Self::Float(n) => Self::Float(-n),
-            Self::Int(n) => Self::Int(-n),
-            Self::Bool(true) => Self::Int(-1),
-            Self::Bool(false) => Self::Int(0),
+            Self::Num(n) => Self::Num(-n),
             _ => error!("TypeError"; "can't use `-` operator with {}", self => 1),
         }
     }
@@ -64,10 +59,7 @@ impl ops::Add for Primitive {
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num + s_num),
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num + s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 + s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num + *s_num as f64),
+            (Self::Num(o_num), Self::Num(s_num)) => Self::Num(o_num + s_num),
 
             (Self::Str(o_str), Self::Str(s_str)) => Self::Str(o_str.to_string() + s_str),
             _ => error!("TypeError"; "tried to use `+` operator between {} and {}", rhs, self => 1),
@@ -81,10 +73,7 @@ impl ops::Sub for Primitive {
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num - s_num),
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num - s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 - s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num - *s_num as f64),
+            (Self::Num(o_num), Self::Num(s_num)) => Self::Num(o_num - s_num),
             _ => error!("TypeError"; "tried to use `-` operator between {} and {}", rhs, self => 1),
         }
     }
@@ -96,10 +85,7 @@ impl ops::Mul for Primitive {
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(s_num * o_num),
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num * s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 * s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num * *s_num as f64),
+            (Self::Num(o_num), Self::Num(s_num)) => Self::Num(o_num * s_num),
             _ => error!("TypeError"; "tried to use `*` operator between {} and {}", rhs, self => 1),
         }
     }
@@ -111,10 +97,7 @@ impl ops::Div for Primitive {
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num / s_num),
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num / s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 / s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num / *s_num as f64),
+            (Self::Num(o_num), Self::Num(s_num)) => Self::Num(o_num / s_num),
             _ => error!("TypeError"; "tried to use `/` operator between {} and {}", rhs, self => 1),
         }
     }
@@ -126,12 +109,7 @@ impl ops::Rem for Primitive {
     #[inline]
     fn rem(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num % s_num),
-
-
-            (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num % s_num),
-            (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 % s_num),
-            (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num % *s_num as f64),
+            (Self::Num(o_num), Self::Num(s_num)) => Self::Num(o_num % s_num),
             _ => error!("TypeError"; "tried to use `%` operator between {} and {}", rhs, self => 1),
         }
     }
@@ -141,13 +119,7 @@ impl cmp::PartialEq for Primitive {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Int(o_num), Self::Int(s_num)) => o_num == s_num,
-
-
-            (Self::Float(o_num), Self::Float(s_num)) => o_num == s_num,
-            (Self::Int(o_num), Self::Float(s_num)) => *o_num as f64 == *s_num,
-            (Self::Float(o_num), Self::Int(s_num)) => *o_num == *s_num as f64,
-
+            (Self::Num(o_num), Self::Num(s_num)) => o_num == s_num,
             (Self::Bool(s_bool), Self::Bool(o_bool)) => s_bool == o_bool,
             (Self::None, Self::None) => true,
             _ => error!("TypeError"; "can't compare {} with {} using == or ~=", self, other => 1),
@@ -159,8 +131,7 @@ impl cmp::PartialOrd for Primitive {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         match (self, other) {
-            (Self::Int(s_num), Self::Int(o_num)) => o_num.partial_cmp(s_num),
-            (Self::Float(s_num), Self::Float(o_num)) => o_num.partial_cmp(s_num),
+            (Self::Num(s_num), Self::Num(o_num)) => o_num.partial_cmp(s_num),
             (Self::Str(s_str), Self::Str(o_str)) => o_str.partial_cmp(s_str),
             (Self::Bool(s_bool), Self::Bool(o_bool)) => o_bool.partial_cmp(s_bool),
             _ => {
@@ -175,8 +146,7 @@ impl Primitive {
         match self {
             Self::Bool(false) => false,
             Self::None => false,
-            Self::Float(x) if x.abs() < f64::EPSILON => false,
-            Self::Int(0) => false,
+            Self::Num(x) if x.abs() < f64::EPSILON => false,
             Self::Str(b) if b.as_str() == "" => false,
             _ => true,
         }
@@ -184,8 +154,7 @@ impl Primitive {
 
     pub fn to_number(&self) -> Option<Self> {
         match self {
-            Self::Float(n) => Some(Self::Float(*n)),
-            Self::Int(n) => Some(Self::Int(*n)),
+            Self::Num(n) => Some(Self::Num(*n)),
             _ => None,
         }
     }
@@ -206,10 +175,7 @@ impl Primitive {
 
     pub fn pow(&self, rhs: Self) -> Self {
         match (&self, &rhs) {
-            (Self::Int(s_num), Self::Int(o_num)) => Primitive::Int(s_num.pow(*o_num as u32)),
-            (Self::Float(s_num), Self::Int(o_num)) => Primitive::Float(s_num.powf(*o_num as f64)),
-            (Self::Int(s_num), Self::Float(o_num)) => Primitive::Float(o_num.powf(*s_num as f64)),
-            (Self::Float(s_num), Self::Float(o_num)) => Primitive::Float(s_num.powf(*o_num)),
+            (Self::Num(s_num), Self::Num(o_num)) => Primitive::Num(s_num.powf(*o_num)),
             _ => crate::error!("RuntimeError"; "Can't apply operator `**` between {} and {}", &self, &rhs => 1)
         }
     }
@@ -232,13 +198,6 @@ impl IntoPrimitive for String {
 impl IntoPrimitive for f64 {
     #[inline]
     fn into_pri(self) -> Primitive {
-        Primitive::Float(self)
-    }
-}
-
-impl IntoPrimitive for i64 {
-    #[inline]
-    fn into_pri(self) -> Primitive {
-        Primitive::Int(self)
+        Primitive::Num(self)
     }
 }

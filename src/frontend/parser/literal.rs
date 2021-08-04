@@ -5,8 +5,7 @@ pub enum Literal {
     VarNormal(String),
     String(String),
     Bool(bool),
-    Int(i64),
-    Float(f64),
+    Num(f64),
     Operation(Op),
     None,
 }
@@ -16,7 +15,7 @@ impl Literal {
         match *self {
             Self::Bool(false) => false,
             Self::None => false,
-            Self::Float(x) if x == 0.0 => false,
+            Self::Num(x) if x == 0.0 => false,
             _ => true,
         }
     }
