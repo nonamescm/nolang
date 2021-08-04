@@ -6,7 +6,6 @@ use std::{cmp, fmt, ops};
 #[derive(Debug, Clone)]
 pub enum Primitive {
     Int(i32),
-    BigInt(i128),
     Float(f64),
     Str(String),
     Bool(bool),
@@ -27,7 +26,6 @@ impl fmt::Display for Primitive {
             Self::None => "none".to_string(),
             Self::Str(s) => s.to_string(),
             Self::Float(ref n) => n.to_string(),
-            Self::BigInt(ref n) => n.to_string(),
             Self::Int(ref n) => n.to_string(),
             Self::Function(..) => "<function>".to_string(),
             Self::NativeFunc(..) => "<native function>".to_string(),
@@ -53,7 +51,6 @@ impl ops::Neg for Primitive {
         match self {
             Self::Float(n) => Self::Float(-n),
             Self::Int(n) => Self::Int(-n),
-            Self::BigInt(n) => Self::BigInt(-n),
             Self::Bool(true) => Self::Int(-1),
             Self::Bool(false) => Self::Int(0),
             _ => error!("TypeError"; "can't use `-` operator with {}", self => 1),
@@ -67,15 +64,7 @@ impl ops::Add for Primitive {
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_add(*s_num) {
-                Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 + *s_num as i128),
-            },
-
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num + s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 + s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num + *s_num as i128),
-
+            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num + s_num),
             (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num + s_num),
             (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 + s_num),
             (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num + *s_num as f64),
@@ -92,15 +81,7 @@ impl ops::Sub for Primitive {
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_sub(*s_num) {
-                Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 - *s_num as i128),
-            },
-
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num - s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 - s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num - *s_num as i128),
-
+            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num - s_num),
             (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num - s_num),
             (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 - s_num),
             (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num - *s_num as f64),
@@ -115,15 +96,7 @@ impl ops::Mul for Primitive {
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_mul(*s_num) {
-                Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 * *s_num as i128),
-            },
-
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num * s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 * s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num * *s_num as i128),
-
+            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(s_num * o_num),
             (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num * s_num),
             (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 * s_num),
             (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num * *s_num as f64),
@@ -138,15 +111,7 @@ impl ops::Div for Primitive {
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         match (&rhs, &self) {
-            (Self::Int(o_num), Self::Int(s_num)) => match o_num.checked_div(*s_num) {
-                Some(n) => Self::Int(n),
-                None => Self::BigInt(*o_num as i128 / *s_num as i128),
-            },
-
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num / s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 / s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num / *s_num as i128),
-
+            (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num / s_num),
             (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num / s_num),
             (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 / s_num),
             (Self::Float(o_num), Self::Int(s_num)) => Self::Float(o_num / *s_num as f64),
@@ -163,9 +128,6 @@ impl ops::Rem for Primitive {
         match (&rhs, &self) {
             (Self::Int(o_num), Self::Int(s_num)) => Self::Int(o_num % s_num),
 
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => Self::BigInt(o_num % s_num),
-            (Self::Int(o_num), Self::BigInt(s_num)) => Self::BigInt(*o_num as i128 % s_num),
-            (Self::BigInt(o_num), Self::Int(s_num)) => Self::BigInt(o_num % *s_num as i128),
 
             (Self::Float(o_num), Self::Float(s_num)) => Self::Float(o_num % s_num),
             (Self::Int(o_num), Self::Float(s_num)) => Self::Float(*o_num as f64 % s_num),
@@ -181,9 +143,6 @@ impl cmp::PartialEq for Primitive {
         match (self, other) {
             (Self::Int(o_num), Self::Int(s_num)) => o_num == s_num,
 
-            (Self::BigInt(o_num), Self::BigInt(s_num)) => o_num == s_num,
-            (Self::Int(o_num), Self::BigInt(s_num)) => *o_num as i128 == *s_num,
-            (Self::BigInt(o_num), Self::Int(s_num)) => *o_num == *s_num as i128,
 
             (Self::Float(o_num), Self::Float(s_num)) => o_num == s_num,
             (Self::Int(o_num), Self::Float(s_num)) => *o_num as f64 == *s_num,
@@ -201,7 +160,6 @@ impl cmp::PartialOrd for Primitive {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         match (self, other) {
             (Self::Int(s_num), Self::Int(o_num)) => o_num.partial_cmp(s_num),
-            (Self::BigInt(s_num), Self::BigInt(o_num)) => o_num.partial_cmp(s_num),
             (Self::Float(s_num), Self::Float(o_num)) => o_num.partial_cmp(s_num),
             (Self::Str(s_str), Self::Str(o_str)) => o_str.partial_cmp(s_str),
             (Self::Bool(s_bool), Self::Bool(o_bool)) => o_bool.partial_cmp(s_bool),
@@ -219,7 +177,6 @@ impl Primitive {
             Self::None => false,
             Self::Float(x) if x.abs() < f64::EPSILON => false,
             Self::Int(0) => false,
-            Self::BigInt(0) => false,
             Self::Str(b) if b.as_str() == "" => false,
             _ => true,
         }
@@ -229,7 +186,6 @@ impl Primitive {
         match self {
             Self::Float(n) => Some(Self::Float(*n)),
             Self::Int(n) => Some(Self::Int(*n)),
-            Self::BigInt(n) => Some(Self::BigInt(*n)),
             _ => None,
         }
     }
@@ -274,12 +230,5 @@ impl IntoPrimitive for i32 {
     #[inline]
     fn into_pri(self) -> Primitive {
         Primitive::Int(self)
-    }
-}
-
-impl IntoPrimitive for i128 {
-    #[inline]
-    fn into_pri(self) -> Primitive {
-        Primitive::BigInt(self)
     }
 }

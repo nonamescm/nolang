@@ -55,7 +55,6 @@ impl<'a> Default for Env<'a> {
                         Primitive::NativeFunc(..) | Primitive::Function(..) => "Function",
                         Primitive::None => "None",
                         Primitive::Int(..) => "Int",
-                        Primitive::BigInt(..) => "BigInt",
                         Primitive::Float(..) => "Float",
                         Primitive::Bool(..) => "Bool",
                         Primitive::Str(..) => "Str",
@@ -162,7 +161,6 @@ impl<'a> Interpreter<'a> {
             Literal::String(ref s) => Primitive::Str(s.to_string()),
             Literal::Operation(ref op) => self.evaluate(op),
             Literal::Float(n) => Primitive::Float(*n),
-            Literal::BigInt(n) => Primitive::BigInt(*n),
             Literal::Int(n) => Primitive::Int(*n),
             Literal::VarNormal(v) => self.variables.get(v),
             #[allow(unreachable_patterns)]

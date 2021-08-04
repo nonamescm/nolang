@@ -133,12 +133,11 @@ impl Lexer {
 
                 match num.parse::<i32>() {
                     Ok(n) => Tok::Int(n),
-                    Err(..) => match num.parse::<f64>() {
-                        Ok(n) => Tok::Float(n),
-                        Err(..) => Tok::BigInt(num.parse::<i128>().unwrap_or_else(
+                    Err(..) => Tok::Float(
+                        num.parse::<f64>().unwrap_or_else(
                             |_| crate::error!("LexerError"; "can't parse number {} at line {}", num, self.line => 1)
-                        ))
-                    }
+                        )
+                    )
                 }
             }
             c if is_ch_valid(&c) => {

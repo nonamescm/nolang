@@ -8,7 +8,6 @@ pub enum Tokens {
     Ident(String), // identifier, like: let main = 1
     Int(i32),
     Float(f64),
-    BigInt(i128),
     Str(String),
 
     // reserved keywords
@@ -86,7 +85,6 @@ impl std::fmt::Display for Tokens {
                 Ident(ref l) => l.to_string(),
                 Float(ref f) => f.to_string(),
                 Int(ref i) => i.to_string(),
-                BigInt(ref bi) => bi.to_string(),
                 Str(ref s) => s.to_string(),
 
                 True => s("true"),
@@ -131,7 +129,6 @@ impl Tokens {
         matches!(
             *self,
             Self::Int(..)
-                | Self::BigInt(..)
                 | Self::Float(..)
                 | Self::Str(..)
                 | Self::True
