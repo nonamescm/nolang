@@ -181,26 +181,26 @@ impl<'a> Interpreter<'a> {
     fn eval_binary(&mut self, left: Op, op: &Tok, right: Op) -> Primitive {
         match op {
             // operations
-            Tok::Plus => self.evaluate(&right) + self.evaluate(&left),
-            Tok::Minus => self.evaluate(&right) - self.evaluate(&left),
-            Tok::Asterisk => self.evaluate(&right) * self.evaluate(&left),
-            Tok::Slash => self.evaluate(&right) / self.evaluate(&left),
-            Tok::Percent => self.evaluate(&right) % self.evaluate(&left),
-            Tok::Pow => self.evaluate(&right).pow(self.evaluate(&left)),
+            Tok::Plus => self.evaluate(&left) + self.evaluate(&right),
+            Tok::Minus => self.evaluate(&left) - self.evaluate(&right),
+            Tok::Asterisk => self.evaluate(&left) * self.evaluate(&right),
+            Tok::Slash => self.evaluate(&left) / self.evaluate(&right),
+            Tok::Percent => self.evaluate(&left) % self.evaluate(&right),
+            Tok::Pow => self.evaluate(&left).pow(self.evaluate(&right)),
 
             // Comparisons
-            Tok::Comp => (self.evaluate(&right) == self.evaluate(&left)).into_pri(),
-            Tok::Different => (self.evaluate(&right) != self.evaluate(&left)).into_pri(),
+            Tok::Comp => (self.evaluate(&left) == self.evaluate(&right)).into_pri(),
+            Tok::Different => (self.evaluate(&left) != self.evaluate(&right)).into_pri(),
 
-            Tok::Gt => (self.evaluate(&right) > self.evaluate(&left)).into_pri(),
-            Tok::GtOrEq => (self.evaluate(&right) >= self.evaluate(&left)).into_pri(),
+            Tok::Gt => (self.evaluate(&left) > self.evaluate(&right)).into_pri(),
+            Tok::GtOrEq => (self.evaluate(&left) >= self.evaluate(&right)).into_pri(),
 
-            Tok::Lt => (self.evaluate(&right) < self.evaluate(&left)).into_pri(),
-            Tok::LtOrEq => (self.evaluate(&right) <= self.evaluate(&left)).into_pri(),
+            Tok::Lt => (self.evaluate(&left) < self.evaluate(&right)).into_pri(),
+            Tok::LtOrEq => (self.evaluate(&left) <= self.evaluate(&right)).into_pri(),
 
             // Logical operators
-            Tok::And => self.evaluate(&right).and(&mut || self.evaluate(&left)),
-            Tok::Or => self.evaluate(&right).or(&mut || self.evaluate(&left)),
+            Tok::And => self.evaluate(&left).and(&mut || self.evaluate(&right)),
+            Tok::Or => self.evaluate(&left).or(&mut || self.evaluate(&right)),
 
             // should not reach this since I've covered all binary operations
             _ => unreachable!(),
