@@ -203,6 +203,16 @@ impl Primitive {
             false => rhs(),
         }
     }
+
+    pub fn pow(&self, rhs: Self) -> Self {
+        match (&self, &rhs) {
+            (Self::Int(s_num), Self::Int(o_num)) => Primitive::Int(s_num.pow(*o_num as u32)),
+            (Self::Float(s_num), Self::Int(o_num)) => Primitive::Float(s_num.powf(*o_num as f64)),
+            (Self::Int(s_num), Self::Float(o_num)) => Primitive::Float(o_num.powf(*s_num as f64)),
+            (Self::Float(s_num), Self::Float(o_num)) => Primitive::Float(s_num.powf(*o_num)),
+            _ => crate::error!("RuntimeError"; "Can't apply operator `**` between {} and {}", &self, &rhs => 1)
+        }
+    }
 }
 
 impl IntoPrimitive for bool {

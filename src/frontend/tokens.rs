@@ -33,6 +33,7 @@ pub enum Tokens {
     Asterisk, // `*`
     Slash,    // `/`
     Percent,  // `%`
+    Pow,      // `**`
     Rparen,
     Lparen,
     Rbrace,
@@ -81,6 +82,7 @@ impl std::fmt::Display for Tokens {
                 Asterisk => s("*"),
                 Slash => s("/"),
                 Percent => s("%"),
+                Pow => s("**"),
 
                 Ident(ref l) => l.to_string(),
                 Float(ref f) => f.to_string(),

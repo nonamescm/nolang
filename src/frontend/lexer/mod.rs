@@ -75,6 +75,10 @@ impl Lexer {
             // Mathematical operators
             '+' => Tok::Plus,
             '-' => Tok::Minus,
+            '*' if self.peek('*') => {
+                self.next();
+                Tok::Pow
+            }
             '*' => Tok::Asterisk,
             '/' => Tok::Slash,
             '%' => Tok::Percent,

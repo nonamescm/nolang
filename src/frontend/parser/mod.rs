@@ -262,7 +262,7 @@ impl Parser {
     fn factor_op(&mut self) -> Op {
         let mut left = self.unary_op();
 
-        while matches!(self.current, Tok::Asterisk | Tok::Slash | Tok::Percent) {
+        while matches!(self.current, Tok::Asterisk | Tok::Slash | Tok::Percent | Tok::Pow) {
             let operator = self.current.clone();
             self.next_skip();
             let right = self.unary_op();
