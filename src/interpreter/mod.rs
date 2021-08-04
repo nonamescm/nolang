@@ -209,7 +209,6 @@ impl<'a> Interpreter<'a> {
     fn eval_call(&mut self, called: &Op, arguments: Vec<Op>) -> Primitive {
         match called {
             Op::Primary(p) => match &**p {
-                #[allow(unused_parens)]
                 Literal::VarNormal(p) => match self.variables.get(p) {
                     Primitive::Function(block, args) => {
                         let env = args.iter().enumerate().map(|(index, key)| (
@@ -229,7 +228,7 @@ impl<'a> Interpreter<'a> {
                         }
                         func(self.evaluate(&arguments[0]))
                     }
-                    _ => unreachable!(),
+                    e => crate::error!("CallError"; "can't call `{}`", e => 1),
                 },
                 _ => unreachable!(),
             },
