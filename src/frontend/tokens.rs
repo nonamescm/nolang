@@ -6,7 +6,7 @@ pub enum Tokens {
 
     // value fields
     Ident(String), // identifier, like: let main = 1
-    Int(i32),
+    Int(i64),
     Float(f64),
     Str(String),
 

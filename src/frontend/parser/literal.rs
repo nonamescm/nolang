@@ -5,7 +5,7 @@ pub enum Literal {
     VarNormal(String),
     String(String),
     Bool(bool),
-    Int(i32),
+    Int(i64),
     Float(f64),
     Operation(Op),
     None,

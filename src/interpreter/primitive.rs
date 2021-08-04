@@ -5,7 +5,7 @@ use std::{cmp, fmt, ops};
 /// Nolang primitive types
 #[derive(Debug, Clone)]
 pub enum Primitive {
-    Int(i32),
+    Int(i64),
     Float(f64),
     Str(String),
     Bool(bool),
@@ -236,7 +236,7 @@ impl IntoPrimitive for f64 {
     }
 }
 
-impl IntoPrimitive for i32 {
+impl IntoPrimitive for i64 {
     #[inline]
     fn into_pri(self) -> Primitive {
         Primitive::Int(self)

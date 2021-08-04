@@ -175,14 +175,11 @@ impl Parser {
         };
         self.next_skip();
 
-        if matches!(self.current, Tok::Assign) {
-            consume!(self, self.current, Tok::Assign);
+        if consume!(self, self.current, Tok::Assign) {
             let value = self.statement();
 
             Statement::Assign(var_name, Box::new(value))
-        } else {
-            unreachable!()
-        }
+        } else { unreachable!() }
     }
 
     /// Check what's the current Op

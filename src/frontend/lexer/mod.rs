@@ -135,7 +135,7 @@ impl Lexer {
             c if is_valid_math_symbol(&c) => {
                 get_val!(self; is_valid_math_symbol(&self.ch) => num);
 
-                match num.parse::<i32>() {
+                match num.parse::<i64>() {
                     Ok(n) => Tok::Int(n),
                     Err(..) => Tok::Float(
                         num.parse::<f64>().unwrap_or_else(
