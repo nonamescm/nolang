@@ -76,11 +76,7 @@ impl<'a> Env<'a> {
     }
 
     fn set(&mut self, name: String, value: Primitive) {
-        if self.current.get(&name).is_none() {
-            self.current.insert(name, value);
-        } else {
-            crate::error!("TypeError"; "tried to reassign variable `{}`", name => 1)
-        }
+        self.current.insert(name, value);
     }
 
     fn get(&self, name: &str) -> Primitive {
@@ -107,10 +103,6 @@ impl<'a> Interpreter<'a> {
         match statement {
             Statement::Op(op) => self.evaluate(&op),
             Statement::Assign(var, value) => self.s_eval_assign(var, *value),
-            Statement::Block(statements) => self.s_eval_block(statements),
-            Statement::If(condition, block, else_block) => {
-                self.s_eval_if(&condition, *block, *else_block)
-            }
             Statement::FuncAssign(name, arguments, block) => {
                 self.s_eval_func_assign(name, arguments, *block)
             }
@@ -132,21 +124,21 @@ impl<'a> Interpreter<'a> {
     }
 
     /// evaluator for the block `do <Statement>;* done`
-    fn s_eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
+    fn eval_block(&mut self, statements: Vec<Statement>) -> Primitive {
         interpret(statements.into_iter(), Some(&self.variables))
     }
 
-    fn s_eval_if(&mut self, condition: &Op, block: Statement, else_block: Statement) -> Primitive {
+    fn eval_if(&mut self, condition: &Op, block: Op, else_block: Op) -> Primitive {
         if self.evaluate(condition).to_bool() {
-            self.statement(block)
+            self.evaluate(&block)
         } else {
-            self.statement(else_block)
+            self.evaluate(&else_block)
         }
     }
 
     /// Assignment `let x = <OP>;` evaluator
-    fn s_eval_assign(&mut self, var: String, value: Statement) -> Primitive {
-        let value = self.statement(value);
+    fn s_eval_assign(&mut self, var: String, value: Op) -> Primitive {
+        let value = self.evaluate(&value);
 
         self.variables.set(var, value);
         Primitive::None
@@ -257,12 +249,18 @@ impl<'a> Interpreter<'a> {
     fn evaluate(&mut self, operation: &Op) -> Primitive {
         match operation {
             Op::Primary(ref value) => self.eval_primary(&**value),
+
             Op::Unary(ref op, ref right) => self.eval_unary(op, *right.clone()),
-            Op::Binary(ref left, ref op, ref right) => {
-                self.eval_binary(*left.clone(), op, *right.clone())
-            }
+
+            Op::Binary(ref left, ref op, ref right) => self.eval_binary(*left.clone(), op, *right.clone()),
+
             Op::Grouping(ref op) => self.evaluate(op),
+
             Op::Call(ref called, ref arguments) => self.eval_call(&*called, arguments.clone()),
+
+            Op::If(ref cond, ref block, ref else_block) => self.eval_if(cond, *block.clone(), *else_block.clone()),
+
+            Op::Block(ref block) => self.eval_block(block.clone()),
 
             #[allow(unreachable_patterns)]
             // for when I add a new Operation and want to test the parser before going to the

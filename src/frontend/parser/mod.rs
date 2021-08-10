@@ -49,6 +49,7 @@ impl Parser {
 
         while (eself.index as usize) < eself.tokens.len() {
             staments_vec.push(eself.statement());
+            consume!(eself, eself.current, Tok::Eof | Tok::Newline | Tok::Semicolon);
         }
 
         staments_vec.into_iter()
@@ -76,63 +77,17 @@ impl Parser {
         }
     }
 
+
+    // Statements region
     fn statement(&mut self) -> Statement {
         while matches!(self.current, Tok::Newline | Tok::Semicolon) {
             self.next()
         }
         match self.current {
             Tok::Let => self.assign_stat(),
-            Tok::Do => self.block_stat(),
-            Tok::If => self.if_stat(),
             Tok::Defn => self.defn_stat(),
-            _ => {
-                let x = Statement::Op(self.operation());
-                self.index -= 1;
-                self.current = Tok::Semicolon;
-                consume!(self, self.current, Tok::Semicolon | Tok::Newline | Tok::Eof);
-                x
-            }
+            _ => Statement::Op(self.operation())
         }
-    }
-
-    fn if_stat(&mut self) -> Statement {
-        let line = self.line;
-        self.next_skip(); // skips the current `if` toke
-        let condition = self.operation();
-        consume!(self, self.current, Tok::Then);
-        let body = self.statement();
-
-        if matches!(body, Statement::Assign(..)) {
-            crate::error!("SyntaxError"; "tried to declare a variable from a if on line {}", line => 1)
-        }
-
-        match self.current {
-            Tok::Else => {
-                self.next_skip();
-                let else_body = self.statement();
-                Statement::If(condition, Box::new(body), Box::new(else_body))
-            }
-            Tok::Elif => Statement::If(condition, Box::new(body), Box::new(self.if_stat())),
-            _ => crate::error!("ParseError"; "expected `else` after if" => 1),
-        }
-    }
-
-    fn block_stat(&mut self) -> Statement {
-        let line = self.line;
-        let mut vec_stat = vec![];
-        self.next_skip();
-
-        while !matches!(self.current, Tok::End) {
-            vec_stat.push(self.statement());
-
-            if matches!(self.current, Tok::Eof) {
-                crate::error!("ParseError"; "unclosed do block opened on line {}", line => 1)
-            }
-        }
-        consume!(self, self.current, Tok::End);
-        consume!(self, self.current, Tok::Semicolon | Tok::Newline | Tok::Eof);
-
-        Statement::Block(vec_stat)
     }
 
     fn defn_stat(&mut self) -> Statement {
@@ -176,15 +131,56 @@ impl Parser {
         self.next_skip();
 
         if consume!(self, self.current, Tok::Assign) {
-            let value = self.statement();
+            let value = self.operation();
 
             Statement::Assign(var_name, Box::new(value))
         } else { unreachable!() }
     }
+    // End statements region
+
+    // Operations Region
+    fn if_op(&mut self) -> Op {
+        self.next_skip(); // skips the current `if` toke
+        let condition = self.operation();
+        consume!(self, self.current, Tok::Then);
+        let body = self.operation();
+
+        match self.current {
+            Tok::Else => {
+                self.next_skip();
+                let else_body = self.operation();
+                Op::If(Box::new(condition), Box::new(body), Box::new(else_body))
+            }
+            Tok::Elif => Op::If(Box::new(condition), Box::new(body), Box::new(self.if_op())),
+            _ => crate::error!("ParseError"; "expected `else` after if" => 1),
+        }
+    }
+
+    fn block_op(&mut self) -> Op {
+        let line = self.line;
+        let mut vec_stat = vec![];
+        self.next_skip();
+
+        while !matches!(self.current, Tok::End) {
+            vec_stat.push(self.statement());
+
+            if matches!(self.current, Tok::Eof) {
+                crate::error!("ParseError"; "unclosed do block opened on line {}", line => 1)
+            }
+        }
+        consume!(self, self.current, Tok::End);
+        consume!(self, self.current, Tok::Semicolon | Tok::Newline | Tok::Eof);
+
+        Op::Block(vec_stat)
+    }
 
     /// Check what's the current Op
     fn operation(&mut self) -> Op {
-        self.equality_op()
+        match self.current {
+            Tok::If => self.if_op(),
+            Tok::Do => self.block_op(),
+            _ => self.equality_op()
+        }
     }
 
     /// Get raw operations
@@ -220,7 +216,7 @@ impl Parser {
 
             let mut arguments = Vec::new();
             while !matches!(self.current, Tok::Rparen) {
-                arguments.push(self.equality_op());
+                arguments.push(self.operation());
 
                 if matches!(self.current, Tok::Rparen) {
                     break;
