@@ -1,5 +1,10 @@
 <h1>nolang</h1>
 
+## NOTE:
+I archived this repository as a way of showing to my friends how my old
+code looks like, just that. It doesn't have good code, it isn't fast even
+for a tree-walk interpreter. Just please ignore this if you want to review my coding skills.
+
 <h2>A simple tree-walk interpreter written in rust</h2>
 
 * <a href="#why">Why?</a>
@@ -39,3 +44,4 @@ end
 - [ ] Bytecode virtual machine
 - [ ] Types
 - [ ] Modules
+
